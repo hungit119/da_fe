@@ -1,27 +1,12 @@
-import {
-    DeleteColumnOutlined, DeleteOutlined,
-    EditOutlined,
-    EllipsisOutlined,
-    LoadingOutlined,
-    PlayCircleOutlined,
-    PlaySquareOutlined,
-    SettingOutlined
-} from "@ant-design/icons";
-import {Avatar, Button, Card, Form, Image, Input, Modal, Select, Upload} from "antd";
+import {DeleteOutlined, EditOutlined, LoadingOutlined, PlaySquareOutlined} from "@ant-design/icons";
+import {Button, Card, Col, Form, Image, Input, Modal, Row, Select, Spin, Upload} from "antd";
 import React, {useEffect, useState} from 'react';
 import {toast} from "react-toastify";
 import Board from "../assets/create-board.svg";
 import {TYPE_BOARD_OPTIONS} from "../constant";
-import {createBoard, getListBoard} from "../service";
+import {createBoard, deleteBoard, getBoard, getListBoard, updateBoard} from "../service";
 import {getUserFromLocalStorage} from "../session";
 import Meta from "antd/es/card/Meta";
-import {BiSolidTrash} from "react-icons/bi";
-
-const getBase64 = (img, callback) => {
-    const reader = new FileReader();
-    reader.addEventListener('load', () => callback(reader.result));
-    reader.readAsDataURL(img);
-};
 
 const beforeUpload = (file) => {
     const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
@@ -38,14 +23,52 @@ const DashBoard = () => {
     const [form] = Form.useForm();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalDeleteOpen, setIsModalDeleteOpen] = useState(false);
     const [loadingUpload, setLoadingUpload] = useState(false);
     const [loading, setLoading] = useState(false);
     const [imageUrl, setImageUrl] = useState("");
     const [listBoard, setListBoard] = useState([]);
+    const [id, setId] = useState(null);
 
-    const showModal = () => {
-        setIsModalOpen(true);
+    const showModalDelete = (id) => {
+        setId(id)
+        setIsModalDeleteOpen(true);
     };
+    const handleOkDelete = () => {
+        deleteBoard({board_id:id}).then((res => {
+            if (res.data.code) {
+                toast.success(res.data.message)
+                setListBoard(listBoard.filter(board => board.id !== id))
+                setIsModalDeleteOpen(false);
+            }
+        })).catch(err => {
+            console.log(err)
+            toast.error("Xóa bảng không thành công");
+        })
+    };
+    const handleCancelDelete = () => {
+        setIsModalDeleteOpen(false);
+    };
+
+    const showModal = (id) => {
+        setIsModalOpen(true);
+        if (id) {
+            getBoard({board_id: id}).then((res) => {
+                if (res.data.code === 200) {
+                    const board = res.data.data
+                    form.setFieldsValue({
+                        name: board.name,
+                        type: board.type
+                    });
+                    setImageUrl(board.avatar)
+                    setId(id)
+                }
+            }).catch(err => {
+                console.log(err)
+            })
+        }
+    };
+
     const handleCancel = () => {
         setIsModalOpen(false);
     };
@@ -67,18 +90,40 @@ const DashBoard = () => {
             avatar: imageUrl,
             user_id: getUserFromLocalStorage()?.id
         }
-        createBoard(data).then((res) => {
-            setLoading(false);
-            if (res.data.code === 200) {
-                toast.success(res.data.message);
-                setIsModalOpen(false);
-                setImageUrl("");
-                onReset();
-                setListBoard([...listBoard, res.data?.data]);
-            }
-        }).catch((err) => {
-            console.log(err)
-        })
+        if (id) {
+            data.board_id = id
+            updateBoard(data).then((res) => {
+                setLoading(false);
+                if (res.data.code === 200) {
+                    toast.success(res.data.message);
+                    setIsModalOpen(false);
+                    setImageUrl("");
+                    onReset();
+                    setListBoard(listBoard.map(board => board.id === id ? {
+                        ...board,
+                        name: res.data.data.name,
+                        type: res.data.data.type,
+                        avatar: res.data.data.avatar,
+                    } : board));
+                    console.log(listBoard)
+                }
+            }).catch((err) => {
+                console.log(err)
+            })
+        } else {
+            createBoard(data).then((res) => {
+                setLoading(false);
+                if (res.data.code === 200) {
+                    toast.success(res.data.message);
+                    setIsModalOpen(false);
+                    setImageUrl("");
+                    onReset();
+                    setListBoard([...listBoard, res.data?.data]);
+                }
+            }).catch((err) => {
+                console.log(err)
+            })
+        }
     };
     const onFinishFailed = (errorInfo) => {
         console.log('Failed:', errorInfo);
@@ -109,43 +154,59 @@ const DashBoard = () => {
 
     return (
         <div className='nunito'>
-            <p className={"text-xl font-bold mb-4"}>
-                CÁC BẢNG LÀM VIỆC CỦA BẠN
-            </p>
-            <div className={"grid grid-cols-4 gap-6"}>
+            <div className={"flex flex-row justify-between items-center"}>
+                <p className={"text-xl font-bold mb-4"}>
+                    CÁC BẢNG LÀM VIỆC CỦA BẠN
+                </p>
+                <div>
+                    <Button type={"primary"} className="" onClick={showModal}>Tạo bảng mới</Button>
+                </div>
+            </div>
+            <Row className={"gap-4 justify-center p-4"}>
                 {
-                    loading ? <LoadingOutlined/> : (
-                        listBoard.length > 0 ? listBoard.map(board => {
-                            return <Card
-                                className={"shadow-lg"}
-                                style={{
-                                    width: 300,
-                                }}
-                                cover={
-                                    <Image
-                                        alt="example"
-                                        src={board?.avatar ?? "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png"}
-                                        height={150}
-                                        className={"object-cover"}
-                                    />
-                                }
-                                actions={[
-                                    <PlaySquareOutlined key="play" />,
-                                    <EditOutlined key="edit" />,
-                                    <DeleteOutlined key="edit" />,
-                                ]}
-                            >
-                                <Meta
-                                    title="Card title"
+                    loading ? <div className={"w-100"}>
+                        <Spin
+                            indicator={
+                                <LoadingOutlined
+                                    style={{
+                                        fontSize: 48,
+                                    }}
+                                    spin
                                 />
-                            </Card>
+                            }
+                        />
+                    </div> : (
+                        listBoard.length > 0 ? listBoard.map(board => {
+                            return <Col>
+                                <Card
+                                    key={board.id}
+                                    className={"shadow-lg"}
+                                    style={{
+                                        width: 280,
+                                    }}
+                                    cover={
+                                        <Image
+                                            alt="example"
+                                            src={board?.avatar ?? "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png"}
+                                            height={100}
+                                            className={"object-cover"}
+                                        />
+                                    }
+                                    actions={[
+                                        <PlaySquareOutlined key="play"/>,
+                                        <EditOutlined key="edit" onClick={() => showModal(board?.id)}/>,
+                                        <DeleteOutlined key="edit" onClick={() => showModalDelete(board?.id)}/>,
+                                    ]}
+                                >
+                                    <Meta
+                                        title={board.name}
+                                    />
+                                </Card>
+                            </Col>
                         }) : <></>
                     )
                 }
-                <div>
-                    <Button className="p-11" onClick={showModal}>Tạo bảng mới</Button>
-                </div>
-            </div>
+            </Row>
             <Modal className='nunito' width={"304px"} title="Basic Modal" open={isModalOpen} onCancel={handleCancel}
                    footer={[]}
             >
@@ -230,6 +291,9 @@ const DashBoard = () => {
                         </Button>
                     </Form.Item>
                 </Form>
+            </Modal>
+            <Modal title="Xác nhận xóa bảng" open={isModalDeleteOpen} onOk={handleOkDelete} onCancel={handleCancelDelete}>
+                <p>Bạn có chắc muốn xóa bảng : {id}</p>
             </Modal>
         </div>
     )

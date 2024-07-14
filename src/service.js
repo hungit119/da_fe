@@ -15,3 +15,17 @@ export const getListBoard = (params) => {
         params
     })
 }
+export const getBoard = (params) => {
+    return axiosInstance.get("/v1/detail-board", {
+        params
+    })
+}
+export const updateBoard = (params) => {
+    return axiosInstance.put("v1/update-board", params)
+}
+
+export const deleteBoard = (params) => {
+    return axiosInstance.delete("/v1/delete-board", {
+        params
+    })
+}
