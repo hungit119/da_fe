@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { getTokenFromLocalStorage } from "../session";
+import React, {useEffect} from "react";
+import {getTokenFromLocalStorage} from "../session";
 
 const Site = ({ children }) => {
   useEffect(() => {

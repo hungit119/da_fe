@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { login } from "../service";
 import { addDataToLocalStorage, getTokenFromLocalStorage } from "../session";
+import axios from "axios";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const Login = () => {
       .then((res) => {
         if (res?.data?.code === 200) {
           toast.success(res?.data?.message);
+          axios.defaults.headers.common['token'] = res?.data?.data?.access_token;
           addDataToLocalStorage("access_token", res?.data?.data?.access_token);
           addDataToLocalStorage("user", res?.data?.data?.user);
           navigate("/dashboard");
