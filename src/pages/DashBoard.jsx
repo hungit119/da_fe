@@ -7,6 +7,8 @@ import {TYPE_BOARD_OPTIONS} from "../constant";
 import {createBoard, deleteBoard, getBoard, getListBoard, updateBoard} from "../service";
 import {getUserFromLocalStorage} from "../session";
 import Meta from "antd/es/card/Meta";
+import { useDispatch, useSelector } from "react-redux";
+import { addBoard, setBoards,updateBoardSlice,removeBoardSlice } from "../features/board/boardSlice";
 
 const beforeUpload = (file) => {
     const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
@@ -20,6 +22,10 @@ const beforeUpload = (file) => {
     return isJpgOrPng && isLt2M;
 };
 const DashBoard = () => {
+	
+	const dispatch = useDispatch();
+	const listBoard = useSelector(state => state.board.boards);
+	
     const [form] = Form.useForm();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,7 +33,6 @@ const DashBoard = () => {
     const [loadingUpload, setLoadingUpload] = useState(false);
     const [loading, setLoading] = useState(false);
     const [imageUrl, setImageUrl] = useState("");
-    const [listBoard, setListBoard] = useState([]);
     const [id, setId] = useState(null);
 
     const showModalDelete = (id) => {
@@ -38,8 +43,8 @@ const DashBoard = () => {
         deleteBoard({board_id:id}).then((res => {
             if (res.data.code) {
                 toast.success(res.data.message)
-                setListBoard(listBoard.filter(board => board.id !== id))
                 setIsModalDeleteOpen(false);
+				dispatch(removeBoardSlice(res.data.data));
             }
         })).catch(err => {
             console.log(err)
@@ -99,13 +104,7 @@ const DashBoard = () => {
                     setIsModalOpen(false);
                     setImageUrl("");
                     onReset();
-                    setListBoard(listBoard.map(board => board.id === id ? {
-                        ...board,
-                        name: res.data.data.name,
-                        type: res.data.data.type,
-                        avatar: res.data.data.avatar,
-                    } : board));
-                    console.log(listBoard)
+					dispatch(updateBoardSlice(res.data.data));
                 }
             }).catch((err) => {
                 console.log(err)
@@ -118,7 +117,7 @@ const DashBoard = () => {
                     setIsModalOpen(false);
                     setImageUrl("");
                     onReset();
-                    setListBoard([...listBoard, res.data?.data]);
+					dispatch(addBoard(res.data.data))
                 }
             }).catch((err) => {
                 console.log(err)
@@ -140,8 +139,8 @@ const DashBoard = () => {
         }
         getListBoard(param).then(res => {
             if (res.data.code === 200) {
-                setListBoard(res.data.data);
                 setLoading(false);
+				dispatch(setBoards(res.data.data))
             }
         }).catch(err => {
             console.log(err)
@@ -176,8 +175,8 @@ const DashBoard = () => {
                             }
                         />
                     </div> : (
-                        listBoard.length > 0 ? listBoard.map(board => {
-                            return <Col>
+                        listBoard.length > 0 ? listBoard.map((board,index) => {
+                            return <Col key={index}>
                                 <Card
                                     key={board.id}
                                     className={"shadow-lg"}
@@ -286,8 +285,10 @@ const DashBoard = () => {
                             span: 16,
                         }}
                     >
-                        <Button type="primary" htmlType="submit">
-                            Submit
+                        <Button type="primary" htmlType="submit" disabled={loading}>
+	                        {
+								loading ? <Spin/> : <p>Tạo mới</p>
+	                        }
                         </Button>
                     </Form.Item>
                 </Form>
