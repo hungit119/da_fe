@@ -6,6 +6,7 @@ export const login = (params) => {
     return axios.post(`${API_URL}/login`, params)
 }
 
+// board
 export const createBoard = (params) => {
     return axiosInstance.post("v1/create-board", params)
 }
@@ -28,4 +29,22 @@ export const deleteBoard = (params) => {
     return axiosInstance.delete("/v1/delete-board", {
         params
     })
+}
+
+// part
+
+export const createPart = (params) => {
+	return axiosInstance.post("/v1/create-part", params)
+}
+export const getListPart = (params) => {
+	return axiosInstance.get("/v1/get-list-part", {
+		params
+	})
+}
+// card
+export const createCard = (params) => {
+	return axiosInstance.post("/v1/create-card", params)
+}
+export const getListCard = (params) => {
+	return axiosInstance.get("/v1/get-list-card", {params})
 }

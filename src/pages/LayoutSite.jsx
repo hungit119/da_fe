@@ -162,17 +162,22 @@ const LayoutSite               = () => {
 					style={ {
 						padding    : 0,
 						background : colorBgContainer,
+						backgroundColor:"#1D2125",
+						color:"white",
+						height:"48px",
+						zIndex:9999,
 					} }
 					className="flex justify-between items-center nunito"
 				>
 					<Button
 						type="text"
-						icon={ collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/> }
+						icon={ collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined /> }
 						onClick={ () => setCollapsed (!collapsed) }
 						style={ {
 							fontSize : "16px",
 							width    : 64,
 							height   : 64,
+							color:"white"
 						} }
 					/>
 					<div className="flex">
@@ -184,6 +189,7 @@ const LayoutSite               = () => {
 								fontSize : "16px",
 								width    : 64,
 								height   : 64,
+								color:"white"
 							} }
 							onClick={ () => {
 								clearDataFromLocalStorage ();
@@ -196,7 +202,9 @@ const LayoutSite               = () => {
 					style={ {
 						minHeight    : 280,
 						background   : colorBgContainer,
+						backgroundColor:"#1D2125",
 						borderRadius : borderRadiusLG,
+						zIndex:1
 					} }
 					className="nunito"
 				>
