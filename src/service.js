@@ -41,6 +41,13 @@ export const getListPart = (params) => {
 		params
 	})
 }
+
+export const updatePositionParts = (params) => {
+	return axiosInstance.post("/v1/update-position-parts",
+		params
+	)
+}
+
 // card
 export const createCard = (params) => {
 	return axiosInstance.post("/v1/create-card", params)

@@ -8,38 +8,43 @@ import { toast } from "react-toastify";
 import CardBoard from "./CardBoard";
 import { addCard } from "../features/part/partSlice";
 import { LoadingOutlined } from "@ant-design/icons";
+import { Draggable, Droppable } from "react-beautiful-dnd";
 
-const Part = ({part}) => {
-	const {TextArea}              = Input;
+const Part = ({
+	              part,
+	              listID = "LIST",
+	              listType
+              }) => {
+	const {TextArea} = Input;
 	
-	const dispatch = useDispatch();
+	const dispatch = useDispatch ();
 	
 	const [showForm, setShowForm] = useState (false)
-	const [saving, setSaving] = React.useState (false);
+	const [saving, setSaving]     = React.useState (false);
 	
-	const [form] = Form.useForm();
+	const [form]   = Form.useForm ();
 	const onFinish = (values) => {
-		if (!values.name){
+		if (!values.name) {
 			return setShowForm (false);
 		}
-		setSaving(true)
+		setSaving (true)
 		const data = {
-			name: values.name,
-			part_id:part.id,
+			name    : values.name,
+			part_id : part.id,
 		}
-		createCard(data).then((res) => {
-			if (res.data.code === 200){
-				setSaving(false)
-				setShowForm(false)
-				dispatch(addCard({
-					part_id:part.id,
-					data: res.data.data,
+		createCard (data).then ((res) => {
+			if (res.data.code === 200) {
+				setSaving (false)
+				setShowForm (false)
+				dispatch (addCard ({
+					part_id : part.id,
+					data    : res.data.data,
 				}));
-				form.resetFields()
+				form.resetFields ()
 			}
-		}).catch(err => {
-			setSaving(false)
-			toast.error(err.response.data.data.message)
+		}).catch (err => {
+			setSaving (false)
+			toast.error (err.response.data.data.message)
 		})
 	}
 	return (
@@ -49,27 +54,43 @@ const Part = ({part}) => {
 				<Button type={ "primary" } className={ "bg-[#101204] float-end" }
 				        icon={ <FontAwesomeIcon icon={ faEllipsisH } width={ 20 } color={ "white" }/> }/>
 			</div>
-			<div className={"my-2"}>
-				{
-					part.cards?.map((card, index) => (
-						<CardBoard key={ index } card={card}/>
-					))
-				}
+			<div className={ "my-2" }>
+				<Droppable
+					droppableId={ listID }
+					type={ listType }
+				>
+					{ (dropProvided, dropSnapshot) => (
+						<div
+							{...dropProvided.droppableProps}
+						>
+							{
+								part.cards?.map ((card, index) => (
+									<Draggable key={ card.id } draggableId={ card.id } index={ index }>
+										{ (dragProvided, dragSnapshot) => (
+											<CardBoard provided={dragProvided} key={ index } card={ card }/>
+										) }
+									</Draggable>
+								))
+							}
+							{ dropProvided.placeholder }
+						</div>
+					) }
+				</Droppable>
 			</div>
 			{
 				showForm ? <div>
 					<Form form={ form } onFinish={ onFinish }>
-						<Form.Item name="name" className={"m-0"}>
+						<Form.Item name="name" className={ "m-0" }>
 							<TextArea placeholder="Nhập tiêu đề cho thẻ này..." variant={ "borderless" }
 							          rootClassName={ "nunito bg-[#22272B] text-white placeholder-gray-400 py-2" }/>
 						</Form.Item>
 						<div className={ "flex items-center" }>
 							<Button type={ "primary" } htmlType={ "submit" }
 							        className={ "nunito bg-[#579DFF] text-[#101204] mt-2 me-2" }
-							        disabled={saving}
+							        disabled={ saving }
 							>
 								{
-									saving ? <Spin indicator={<LoadingOutlined spin />} /> : "Thêm thẻ"
+									saving ? <Spin indicator={ <LoadingOutlined spin/> }/> : "Thêm thẻ"
 								}
 							</Button>
 							<Button type={ "primary" } className={ "bg-[#101204] mt-2" }

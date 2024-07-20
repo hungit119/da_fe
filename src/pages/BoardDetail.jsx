@@ -1,16 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from "react-router-dom";
-import { createPart, getBoard, getListPart } from "../service";
+import React, { useEffect } from 'react';
+import { useParams } from "react-router-dom";
+import { createPart, getBoard, getListPart, updatePositionParts } from "../service";
 import { useDispatch, useSelector } from "react-redux";
 import { setBoard } from "../features/board/boardSlice";
-import { Avatar, Button, Form, Input, Modal, Spin } from "antd";
+import { Avatar, Button, Form, Input, Spin } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEarth, faPlus, faShare, faStar, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { getUserFromLocalStorage } from "../session";
 import AvatarDefault from "../assets/avatar.jpg"
 import { toast } from "react-toastify";
-import { addParts, reorder, setParts } from "../features/part/partSlice";
-import Part from "../components/Part";
+import { addParts, setParts } from "../features/part/partSlice";
 import { LoadingOutlined } from "@ant-design/icons";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 
@@ -73,8 +72,23 @@ const BoardDetail = () => {
 			console.log (err)
 		})
 	}
-	const onDragEnd = (result) => {
-		if (!result.destination) return;
+	const onDragEnd        = (result) => {
+		// if (!result.destination) return;
+		//
+		// const array      = Array.from (parts);
+		// const startIndex = result.source.index;
+		// const endIndex   = result.destination.index;
+		// const [removed]  = array.splice (startIndex, 1);
+		// array.splice (endIndex, 0, removed);
+		// const newArray = array.map ((item, index) => ( {...item, position : index} ))
+		// dispatch (setParts (newArray))
+		// updatePositionParts (newArray).then (res => {
+		// 	if (res.data.code === 200) {
+		// 		console.log (res)
+		// 	}
+		// }).catch (err => {
+		// 	console.log (err)
+		// })
 		console.log (result)
 	}
 	
@@ -118,54 +132,122 @@ const BoardDetail = () => {
 						<div className={ "p-4 overflow-x-scroll h-[92%]" }>
 							<div className={ "flex items-start gap-4" }>
 								<div className={ "flex items-start gap-4" }>
-									<DragDropContext
-										onDragEnd={(result) =>
-											onDragEnd(result)
-										}
-									>
-										<Droppable droppableId={"droppable"} direction="horizontal">
-											{(provided, snapshot) => {
-												return (
-													<div
-														{...provided.droppableProps}
-														ref={provided.innerRef}
-														style={{
-															width: "100%",
-															minHeight: 500,
-														}}
-														className={"flex gap-4"}
-													>
-														{
-															JSON.parse(JSON.stringify(parts)).sort((a, b) => a.position - b.position).map((part,index) => (
-																<Draggable
-																	key={part.id}
-																	draggableId={`${part.id}`}
-																	index={index}
-																>
-																	{(provided, snapshot) => {
-																		return (
-																			<div
-																				ref={provided.innerRef}
-																				{...provided.draggableProps}
-																				{...provided.dragHandleProps}
-																				style={{
-																					userSelect: "none",
-																					cursor: snapshot.isDragging
-																						? "grabbing"
-																						: "grab",
-																					...provided.draggableProps.style,
-																				}}
+									{/*<DragDropContext*/ }
+									{/*	onDragEnd={(result) =>*/ }
+									{/*		onDragEnd(result)*/ }
+									{/*	}*/ }
+									{/*>*/ }
+									{/*	<Droppable droppableId={"part"} type={"COLUMN"} direction="horizontal">*/ }
+									{/*		{(provided, snapshot) => {*/ }
+									{/*			return (*/ }
+									{/*				<div*/ }
+									{/*					{...provided.droppableProps}*/ }
+									{/*					ref={provided.innerRef}*/ }
+									{/*					style={{*/ }
+									{/*						width: "100%",*/ }
+									{/*						minHeight: 500,*/ }
+									{/*					}}*/ }
+									{/*					className={"flex gap-4"}*/ }
+									{/*				>*/ }
+									{/*					{*/ }
+									{/*						JSON.parse(JSON.stringify(parts)).sort((a, b) => a.position - b.position).map((part,index) => (*/ }
+									{/*							<Draggable*/ }
+									{/*								key={part.id}*/ }
+									{/*								draggableId={`${part.name}`}*/ }
+									{/*								index={index}*/ }
+									{/*							>*/ }
+									{/*								{(provided, snapshot) => {*/ }
+									{/*									return (*/ }
+									{/*										<div*/ }
+									{/*											ref={provided.innerRef}*/ }
+									{/*											{...provided.draggableProps}*/ }
+									{/*											{...provided.dragHandleProps}*/ }
+									{/*											style={{*/ }
+									{/*												userSelect: "none",*/ }
+									{/*												cursor: snapshot.isDragging*/ }
+									{/*													? "grabbing"*/ }
+									{/*													: "grab",*/ }
+									{/*												...provided.draggableProps.style,*/ }
+									{/*											}}*/ }
+									{/*										>*/ }
+									{/*											<Part part={part} listID={part.title}  listType="CARD"/>*/ }
+									{/*										</div>)*/ }
+									{/*								}}*/ }
+									{/*							</Draggable>*/ }
+									{/*						))*/ }
+									{/*					}*/ }
+									{/*					{provided.placeholder}*/ }
+									{/*				</div>)*/ }
+									{/*		}}*/ }
+									{/*	</Droppable>*/ }
+									{/*</DragDropContext>*/ }
+									<DragDropContext onDragEnd={ onDragEnd }>
+										<Droppable droppableId="board"
+										           type="COLUMN"
+										           direction="horizontal">
+											{ (provided) => (
+												<div className={ "flex gap-4" }
+												     ref={ provided.innerRef } { ...provided.droppableProps }>
+													{
+														JSON.parse (JSON.stringify (parts)).sort ((a, b) => a.position - b.position).map ((part, index) => (
+															<Draggable draggableId={ `part-${ part.id }` }
+															           index={ index }>
+																{ (provided, snapshot) => (
+																	<div className={ "p-4 bg-[#22272B] text-white" }
+																	     ref={ provided.innerRef } { ...provided.draggableProps }>
+																		<p
+																			className={ "bg-black p-2" }
+																			{ ...provided.dragHandleProps }
+																		>{ part.name }</p>
+																		<div>
+																			<Droppable
+																				droppableId={ `part-${ part.id }` }
+																				type= "CARD"
+																				index={index}
 																			>
-																				<Part part={part} />
-																			</div>)
-																	}}
-																</Draggable>
-															))
-														}
-													</div>)
-											}}
+																				{ (providedCard, snapshot) => (
+																					<div
+																						className={"bg-blue-500 p-4"}
+																						ref={ providedCard.innerRef }
+																						{ ...providedCard.droppableProps }
+																					>
+																							{
+																								part.cards.map ((card, index) =>
+																									<Draggable
+																										key={ card.id }
+																										draggableId={ `card-${ card.id }` }
+																										index={ index }>
+																										{ (dragProvidedCard, dragSnapshot) => (
+																											<div
+																												className={ "bg-amber-400 p-4 my-2" }
+																												ref={ dragProvidedCard.innerRef }
+																												{ ...dragProvidedCard.draggableProps }
+																												{ ...dragProvidedCard.dragHandleProps }
+																											>
+																												{
+																													card.name
+																												}
+																											</div>
+																										) }
+																									</Draggable>
+																								)
+																							}
+																							{ providedCard.placeholder }
+																					</div>
+																				) }
+																			</Droppable>
+																		</div>
+																	</div>
+																) }
+															</Draggable>
+														))
+													}
+													{ provided.placeholder }
+												</div>
+											) }
 										</Droppable>
 									</DragDropContext>
+								
 								</div>
 								{
 									!showFormAddPart ? <Button
