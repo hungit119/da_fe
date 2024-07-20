@@ -153,12 +153,12 @@ const DashBoard = () => {
 
     return (
         <div className='nunito'>
-            <div className={"flex flex-row justify-between items-center"}>
-                <p className={"text-xl font-bold mb-4"}>
+            <div className={"flex flex-row justify-between items-center px-10 py-4"}>
+                <p className={"text-xl font-bold mb-4 text-white"}>
                     CÁC BẢNG LÀM VIỆC CỦA BẠN
                 </p>
                 <div>
-                    <Button type={"primary"} className="" onClick={showModal}>Tạo bảng mới</Button>
+                    <Button type={"primary"} className="" size={"large"} onClick={showModal}>Tạo bảng mới</Button>
                 </div>
             </div>
             <Row className={"gap-4 justify-center p-4"}>

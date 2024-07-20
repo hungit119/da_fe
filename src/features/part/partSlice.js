@@ -10,16 +10,20 @@ export const partSlice = createSlice({
 	initialState,
 	reducers:{
 		addParts        : (state, action) => {
-			state.parts.unshift(action.payload)
+			state.parts.push(action.payload)
 		},
 		setParts        : (state, action) => {
 			state.parts = action.payload
 		},
 		addCard        : (state, action) => {
 			state.parts.find(part => part.id === action.payload.part_id)?.cards.push(action.payload.data)
+		},
+		reorder : (state, action) => {
+			const [removed] = state.parts.splice(action.payload.startIndex, 1);
+			state.parts.splice(action.payload.endIndex,0,removed)
 		}
 	}
 })
 
-export const {addParts,setParts,addCard} = partSlice.actions
+export const {addParts,setParts,addCard,reorder} = partSlice.actions
 export default partSlice.reducer

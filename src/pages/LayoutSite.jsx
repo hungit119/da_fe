@@ -134,7 +134,7 @@ const LayoutSite               = () => {
 					theme="dark"
 					mode="inline"
 					defaultSelectedKeys={ ["1"] }
-					className="nunito"
+					className="nunito over"
 				>
 					<Menu.Item key="1" icon={ <IoHomeOutline/> }>
 						<Link to="/dashboard">Bảng</Link>

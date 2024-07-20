@@ -35,6 +35,7 @@ const Part = ({part}) => {
 					part_id:part.id,
 					data: res.data.data,
 				}));
+				form.resetFields()
 			}
 		}).catch(err => {
 			setSaving(false)
