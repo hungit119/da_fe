@@ -58,3 +58,6 @@ export const getListCard = (params) => {
 export const updatePositionPartCard = (params) => {
 	return axiosInstance.post("/v1/update-part-card", params)
 }
+export const saveCard = (params) => {
+	return axiosInstance.post("/v1/save-card", params)
+}
