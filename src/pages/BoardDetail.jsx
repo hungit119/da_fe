@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { createPart, getBoard, getListPart, updatePositionPartCard, updatePositionParts } from "../service";
 import { useDispatch, useSelector } from "react-redux";
 import { setBoard } from "../features/board/boardSlice";
-import { Avatar, Button, Form, Input, Spin } from "antd";
+import { Avatar, Button, Form, Image, Input, Spin } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEarth, faPlus, faShare, faStar, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { getUserFromLocalStorage } from "../session";
@@ -154,8 +154,8 @@ const BoardDetail = () => {
 								<Button type={ "text" } className={ "me-2" }
 								        icon={ <FontAwesomeIcon icon={ faEarth } width={ 20 } color={ "white" }/> }/>
 							</div>
-							<div className={ "flex items-end justify-end" }>
-								<Avatar className={ "rounded-full p-1 border-gray-400 me-2 cursor-pointer" }
+							<div className={ "flex items-center justify-end" }>
+								<Image width={42} height={42} className={ "rounded-full p-1 border-gray-400 me-2 cursor-pointer object-cover" }
 								        src={ getUserFromLocalStorage ()?.avatar ? getUserFromLocalStorage ()?.avatar : AvatarDefault }/>
 								<Button icon={ <FontAwesomeIcon icon={ faShare }/> } className={ "nunito" }>Chia
 								                                                                            sẻ</Button>

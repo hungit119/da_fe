@@ -17,7 +17,6 @@ const CardItem = ({card, part, index}) => {
 	const [value, setValue]             = useState ('');
 	const reactQuillRef                 = useRef (null);
 	const [images, setImages]           = React.useState ([]);
-	
 	const [form] = useForm ()
 	
 	const showModal    = () => {
@@ -32,6 +31,8 @@ const CardItem = ({card, part, index}) => {
 	
 	useEffect (() => {
 		form.setFieldValue ("name", card.name);
+		setValue (card.description)
+		setImages (card.attachments)
 	}, []);
 	
 	const imageHandler = useCallback (() => {
@@ -69,7 +70,13 @@ const CardItem = ({card, part, index}) => {
 			created   : response.data.created_at,
 			name_file : response.data.original_filename,
 		}
-		setImages ([...images, image]);
+		setImages ([...images, {
+			url: image.url,
+			content: JSON.stringify({
+				created: image.created,
+				name_file: image.name_file,
+			}),
+		}]);
 		
 		return response.data.url
 	}
@@ -79,27 +86,24 @@ const CardItem = ({card, part, index}) => {
 	}
 	
 	const onFinish = (values) => {
-		const imgs = images.map(
-			item => ({
-				id : item.id,
-				url: item.url,
-				content: JSON.stringify({
-					name_file:item.name_file,
-					created: item.created,
-				})
-			})
+		const imgs = images.map (
+			item => ( {
+				id      : item.id,
+				url     : item.url,
+				content : item.content
+			} )
 		)
 		
 		const dataCard = {
-			card_id : card.id,
-			name: values.name,
-			description: value,
-			images:imgs
+			card_id     : card.id,
+			name        : values.name,
+			description : value,
+			images      : imgs
 		}
-		saveCard(dataCard).then(res => {
+		saveCard (dataCard).then (res => {
 			console.log (res)
-		}).catch(err => {
-			toast.error(err.response.data.message)
+		}).catch (err => {
+			toast.error (err.response.data.message)
 		})
 	}
 	
@@ -132,7 +136,7 @@ const CardItem = ({card, part, index}) => {
 				) }
 			</Draggable>
 			<Modal footer={ [] } width={ "768px" } open={ isModalOpen } onOk={ handleOk } onCancel={ handleCancel }>
-				<Form onFinish={onFinish} form={ form } style={ {color : "#B6C2CF"} } className={ "nunito" }>
+				<Form onFinish={ onFinish } form={ form } style={ {color : "#B6C2CF"} } className={ "nunito" }>
 					<div className={ "flex items-start w-100 pe-6 gap-4" }>
 						<FontAwesomeIcon icon={ faCreditCard } size={ "xl" } className={ "mt-2" }/>
 						<div className={ "flex-1" }>
@@ -216,7 +220,7 @@ const CardItem = ({card, part, index}) => {
 											        onClick={ () => setShowQuill (false) }>Hủy</Button>
 										</div>
 									</div> :
-									value === "" ? <div
+									!value ? <div
 											onClick={ () => {
 												setShowQuill (true)
 											} }
@@ -236,15 +240,61 @@ const CardItem = ({card, part, index}) => {
 						</div>
 					</div>
 					{
-						images.length > 0 && <div className={ "flex items-start w-100 pe-6 gap-4" }>
+						images?.length > 0 && <div className={ "flex items-start w-100 pe-6 gap-4" }>
 							<FontAwesomeIcon icon={ faPaperclip } size={ "lg" } className={ "mt-2" }/>
 							<div className={ "flex-1" }>
 								<div className={ "flex items-center justify-between" }>
 									<p className={ "font-bold text-lg" }>Các tập tin đính kèm</p>
 									<Button type={ "primary" }>Thêm</Button>
 								</div>
-								<div>
-								
+								<div className={ "mt-4" }>
+									{
+										images.map ((image, index) => {
+											let initialTime = new Date (JSON.parse (image?.content)?.created);
+											let now         = new Date ();
+											let diff        = now - initialTime;
+											
+											let seconds = Math.floor (diff / 1000);
+											let minutes = Math.floor (diff / ( 1000 * 60 ));
+											let hours   = Math.floor (diff / ( 1000 * 60 * 60 ));
+											let days    = Math.floor (diff / ( 1000 * 60 * 60 * 24 ));
+											
+											let timeLast = 0
+											
+											if (seconds < 60) {
+												timeLast = seconds + " giây"
+											} else if (minutes < 60) {
+												timeLast = minutes + " phút"
+											} else if (hours < 24) {
+												timeLast = hours + " giờ"
+											} else {
+												timeLast = days + " ngày"
+											}
+											
+											return <div key={ index } className={"flex"}>
+												<Image src={ image.url } width={ 112 } height={ 70 }
+												       className={ "object-cover rounded" }/>
+												<div className={ "flex flex-col ms-4" }>
+													<p className={"font-bold text-lg"}>{
+														JSON.parse (image?.content)?.name_file
+													}</p>
+													<div className={ "flex" }>
+														<p>Đã thêm {
+															timeLast
+														} trước</p> <span className={ "mx-2" }>&#x25CF;</span> <p
+														className={ "underline" }>Bình
+														                          luận</p>
+														<span className={ "mx-2" }>&#x25CF;</span> <p
+														className={ "underline" }>Tải xuống</p>
+														<span className={ "mx-2" }>&#x25CF;</span> <p
+														className={ "underline" }>Xóa</p>
+														<span className={ "mx-2" }>&#x25CF;</span> <p
+														className={ "underline" }>Chỉnh sửa</p>
+													</div>
+												</div>
+											</div>
+										})
+									}
 								</div>
 							</div>
 						</div>

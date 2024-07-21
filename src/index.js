@@ -32,7 +32,8 @@ root.render (
 						Modal: {
 							contentBg:"#323940",
 							colorText:"#B6C2CF",
-						}
+							colorTextBase:"#B6C2CF"
+						},
 					},
 				} }
 			>
