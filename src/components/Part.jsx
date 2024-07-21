@@ -9,11 +9,11 @@ import CardBoard from "./CardBoard";
 import { addCard } from "../features/part/partSlice";
 import { LoadingOutlined } from "@ant-design/icons";
 import { Draggable, Droppable } from "react-beautiful-dnd";
+import ListCard from "./ListCard";
 
 const Part = ({
 	              part,
-	              listID = "LIST",
-	              listType
+	              index
               }) => {
 	const {TextArea} = Input;
 	
@@ -48,70 +48,59 @@ const Part = ({
 		})
 	}
 	return (
-		<div className={ "min-w-[272px] bg-[#101204] shadow-lg rounded-xl pb-4 pt-4 ps-4 pe-3 text-white" }>
-			<div className={ "flex justify-between items-center" }>
-				<p>{ part?.name }</p>
-				<Button type={ "primary" } className={ "bg-[#101204] float-end" }
-				        icon={ <FontAwesomeIcon icon={ faEllipsisH } width={ 20 } color={ "white" }/> }/>
-			</div>
-			<div className={ "my-2" }>
-				<Droppable
-					droppableId={ listID }
-					type={ listType }
+		<Draggable key={part.id} draggableId={ `part-${ part.id }` }
+		           index={ index }>
+			{ (provided, snapshot) => (
+				<div className={ `${snapshot.isDragging ? "bg-transparent backdrop-blur-lg" : ""} min-w-[272px] bg-[#101204] shadow-lg rounded-xl pb-4 pt-4 ps-4 pe-3 text-white` }
+				     ref={ provided.innerRef } { ...provided.draggableProps }
 				>
-					{ (dropProvided, dropSnapshot) => (
-						<div
-							{...dropProvided.droppableProps}
-						>
-							{
-								part.cards?.map ((card, index) => (
-									<Draggable key={ card.id } draggableId={ card.id } index={ index }>
-										{ (dragProvided, dragSnapshot) => (
-											<CardBoard provided={dragProvided} key={ index } card={ card }/>
-										) }
-									</Draggable>
-								))
-							}
-							{ dropProvided.placeholder }
-						</div>
-					) }
-				</Droppable>
-			</div>
-			{
-				showForm ? <div>
-					<Form form={ form } onFinish={ onFinish }>
-						<Form.Item name="name" className={ "m-0" }>
-							<TextArea placeholder="Nhập tiêu đề cho thẻ này..." variant={ "borderless" }
-							          rootClassName={ "nunito bg-[#22272B] text-white placeholder-gray-400 py-2" }/>
-						</Form.Item>
-						<div className={ "flex items-center" }>
-							<Button type={ "primary" } htmlType={ "submit" }
-							        className={ "nunito bg-[#579DFF] text-[#101204] mt-2 me-2" }
-							        disabled={ saving }
-							>
-								{
-									saving ? <Spin indicator={ <LoadingOutlined spin/> }/> : "Thêm thẻ"
-								}
-							</Button>
-							<Button type={ "primary" } className={ "bg-[#101204] mt-2" }
-							        icon={ <FontAwesomeIcon icon={ faXmark } width={ 20 } size={ "xl" }
-							                                color={ "white" }/> }
-							        onClick={ () => setShowForm (false) }
+					<div className={ "flex justify-between items-center" } { ...provided.dragHandleProps }
+					>
+						<p>{ part?.name }</p>
+						<Button type={ "primary" } className={ "bg-[#101204] float-end" }
+						        icon={ <FontAwesomeIcon icon={ faEllipsisH } width={ 20 } color={ "white" }/> }/>
+					</div>
+					<div className={"mt-2"}>
+						<ListCard part={part} index={index}/>
+					</div>
+					{
+						showForm ? <div>
+							<Form form={ form } onFinish={ onFinish }>
+								<Form.Item name="name" className={ "m-0" }>
+									<TextArea placeholder="Nhập tiêu đề cho thẻ này..." variant={ "borderless" }
+									          rootClassName={ "nunito bg-[#22272B] text-white placeholder-gray-400 py-2" }/>
+								</Form.Item>
+								<div className={ "flex items-center" }>
+									<Button type={ "primary" } htmlType={ "submit" }
+									        className={ "nunito bg-[#579DFF] text-[#101204] mt-2 me-2" }
+									        disabled={ saving }
+									>
+										{
+											saving ? <Spin indicator={ <LoadingOutlined spin/> }/> : "Thêm thẻ"
+										}
+									</Button>
+									<Button type={ "primary" } className={ "bg-[#101204] mt-2" }
+									        icon={ <FontAwesomeIcon icon={ faXmark } width={ 20 } size={ "xl" }
+									                                color={ "white" }/> }
+									        onClick={ () => setShowForm (false) }
+									/>
+								</div>
+							</Form>
+						</div> : <div className={ "flex justify-between items-center gap-2" }>
+							<Button type={ "primary" } className={ "bg-[#101204] w-4/5" }
+							        icon={ <FontAwesomeIcon icon={ faPlus } size={ "lg" }/> }
+							        onClick={ () => setShowForm (true) }
+							>Thêm thẻ</Button>
+							<Button type={ "primary" } className={ " bg-[#101204] float-end w-20" }
+							        icon={ <FontAwesomeIcon icon={ faCreditCard } width={ 20 } color={ "white" }/> }
 							/>
 						</div>
-					</Form>
-				</div> : <div className={ "flex justify-between items-center gap-2" }>
-					<Button type={ "primary" } className={ "bg-[#101204] w-4/5" }
-					        icon={ <FontAwesomeIcon icon={ faPlus } size={ "lg" }/> }
-					        onClick={ () => setShowForm (true) }
-					>Thêm thẻ</Button>
-					<Button type={ "primary" } className={ " bg-[#101204] float-end w-20" }
-					        icon={ <FontAwesomeIcon icon={ faCreditCard } width={ 20 } color={ "white" }/> }
-					/>
+					}
+				
 				</div>
-			}
-		
-		</div>
+			) }
+		</Draggable>
+	
 	);
 };
 

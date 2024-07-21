@@ -55,3 +55,6 @@ export const createCard = (params) => {
 export const getListCard = (params) => {
 	return axiosInstance.get("/v1/get-list-card", {params})
 }
+export const updatePositionPartCard = (params) => {
+	return axiosInstance.post("/v1/update-part-card", params)
+}

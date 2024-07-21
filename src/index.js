@@ -24,6 +24,15 @@ root.render (
 							colorPrimary : '#282D33',
 							algorithm    : true, // Enable algorithm
 						},
+						Input: {
+							activeBg:"#22272B",
+							colorBgTextActive:"#22272B",
+							colorText:"#B2BFCB"
+						},
+						Modal: {
+							contentBg:"#323940",
+							colorText:"#B6C2CF",
+						}
 					},
 				} }
 			>
