@@ -75,6 +75,7 @@ const BoardDetail = () => {
 	}
 	const onDragEnd        = (result) => {
 		if (!result.destination) return;
+		if (result.source.droppableId === result.destination.droppableId) return;
 		if (result.type === "PART") {
 			const array      = Array.from (parts);
 			const startIndex = result.source.index;
