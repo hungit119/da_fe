@@ -211,7 +211,7 @@ const LayoutSite               = () => {
 								/>
 							</div>
 							{
-								listBoard.length > 0 && listBoard.map ((item) => <NavLink
+								listBoard?.length > 0 && listBoard.map ((item) => <NavLink
 									className={ "flex items-center px-4 py-2 hover:bg-[#3C3F42]" }
 									to={ `/board/${ item.id }` }>
 									<Image preview={false} width={ 32 } height={ 20 } className={ "object-cover rounded-sm" }

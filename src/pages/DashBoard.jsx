@@ -175,7 +175,7 @@ const DashBoard    = () => {
 							}
 						/>
 					</div> : (
-						listBoard.length > 0 ? listBoard.map ((board, index) => {
+						listBoard?.length > 0 ? listBoard.map ((board, index) => {
 							return <Col className={"relative hover:cursor-pointer"}>
 								<Image width={ 300 }
 								       height={120}

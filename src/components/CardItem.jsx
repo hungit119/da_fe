@@ -25,7 +25,7 @@ import { saveCardSlice, setParts } from "../features/part/partSlice";
 
 const CardItem = ({card, part, index}) => {
 	
-	const dispatch = useDispatch();
+	const dispatch                      = useDispatch ();
 	const [isModalOpen, setIsModalOpen] = useState (false);
 	const [showQuill, setShowQuill]     = useState (false);
 	const [value, setValue]             = useState ('');
@@ -107,6 +107,7 @@ const CardItem = ({card, part, index}) => {
 			item => ( {
 				id      : item.id,
 				url     : item.url,
+				type    : 1,
 				content : item.content
 			} )
 		)
@@ -118,10 +119,10 @@ const CardItem = ({card, part, index}) => {
 			images      : imgs
 		}
 		saveCard (dataCard).then (res => {
-			if (res.data.code === 200){
-				dispatch(saveCardSlice({
-					part_id:part.id,
-					card:dataCard
+			if (res.data.code === 200) {
+				dispatch (saveCardSlice ({
+					part_id : part.id,
+					card    : dataCard
 				}))
 			}
 		}).catch (err => {
@@ -149,9 +150,9 @@ const CardItem = ({card, part, index}) => {
 						onClick={ showModal }
 					>
 						{
-							card.attachments.find (att => att.type === 1)?.url &&
+							card.attachments?.find (att => att.type === 1)?.url &&
 							<div>
-								<Image src={ card.attachments.find (att => att.type === 1)?.url }
+								<Image src={ card.attachments?.find (att => att.type === 1)?.url }
 								       className={ "rounded-xl" } preview={ false }/>
 							</div>
 						}
@@ -172,11 +173,11 @@ const CardItem = ({card, part, index}) => {
 									</Tooltip>
 								}
 								{
-									card.attachments.length > 0 &&
-									<Tooltip title={ `Có ${ card.attachments.length } file đính kèm` }>
+									card.attachments?.length > 0 &&
+									<Tooltip title={ `Có ${ card.attachments?.length } file đính kèm` }>
 										<div className={ "flex items-center cursor-pointer" }>
 											<FontAwesomeIcon icon={ faPaperclip } size={ "sm" } className={ "me-1" }/>
-											<p>{ card.attachments.length }</p>
+											<p>{ card.attachments?.length }</p>
 										</div>
 									</Tooltip>
 								}
@@ -188,16 +189,16 @@ const CardItem = ({card, part, index}) => {
 			<Modal footer={ [] } width={ "768px" } open={ isModalOpen } onOk={ handleOk } onCancel={ handleCancel }>
 				<div className={ "mb-4 flex justify-center mx-5 mt-5" }
 				     style={ {
-					     backgroundImage    : `url(${ card.attachments.find (att => att.type === 1)?.url ? card.attachments.find (att => att.type === 1)?.url : "" })`,
+					     backgroundImage    : `url(${ card.attachments?.find (att => att.type === 1)?.url ? card.attachments.find (att => att.type === 1)?.url : "" })`,
 					     backgroundRepeat   : "no-repeat",
 					     backgroundSize     : "cover",
 					     backgroundPosition : "center",
 				     } }
 				>
 					{
-						card.attachments.find (att => att.type === 1)?.url &&
-						<div className={"flex justify-center items-center backdrop-blur-xl h-full w-full"}>
-							<Image width={ 300 } src={ card.attachments.find (att => att.type === 1)?.url }/>
+						card.attachments?.find (att => att.type === 1)?.url &&
+						<div className={ "flex justify-center items-center backdrop-blur-xl h-full w-full" }>
+							<Image width={ 300 } src={ card.attachments?.find (att => att.type === 1)?.url }/>
 						</div>
 					}
 				</div>

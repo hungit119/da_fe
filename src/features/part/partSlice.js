@@ -9,22 +9,26 @@ export const partSlice = createSlice ({
 	name     : "part",
 	initialState,
 	reducers : {
-		addParts : (state, action) => {
+		addParts      : (state, action) => {
 			state.parts.push (action.payload)
 		},
-		setParts : (state, action) => {
+		setParts      : (state, action) => {
 			state.parts = action.payload
 		},
-		addCard  : (state, action) => {
+		addCard       : (state, action) => {
 			state.parts.find (part => part.id === action.payload.part_id)?.cards.push (action.payload.data)
 		},
 		saveCardSlice : (state, action) => {
 			state.parts = state.parts.map (part => part.id !== action.payload.part_id ? part : {
 				...part,
-				cards : part.cards.map (card => card.id === action.payload.card.card_id ? action.payload.card : card)
+				cards : part.cards.map (card => card.id === action.payload.card.card_id ? {
+					...card, attachments : [...card.attachments, ...action.payload.card.images],
+					description          : action.payload.card.description,
+					name: action.payload.card.name,
+				} : card)
 			})
 		},
-		reorder  : (state, action) => {
+		reorder       : (state, action) => {
 			const [removed] = state.parts.splice (action.payload.startIndex, 1);
 			state.parts.splice (action.payload.endIndex, 0, removed)
 		}
