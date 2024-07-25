@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Draggable } from "react-beautiful-dnd";
-import { Button, Form, Image, Input, Modal, Tooltip } from "antd";
+import { Button, Form, Image, Input, Modal, Spin, Tooltip } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
 	faArrowRight, faBookmark,
@@ -18,10 +18,11 @@ import 'react-quill/dist/quill.snow.css';
 import ReactQuill from "react-quill";
 import axios from "axios";
 import { useForm } from "antd/es/form/Form";
-import { saveCard } from "../service";
+import { createCheckList, createCheckListItem, saveCard } from "../service";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
-import { saveCardSlice, setParts } from "../features/part/partSlice";
+import { addChecklist, addChecklistItem, saveCardSlice, setParts } from "../features/part/partSlice";
+import CheckList from "./CheckList";
 
 const CardItem = ({card, part, index}) => {
 	
@@ -32,6 +33,18 @@ const CardItem = ({card, part, index}) => {
 	const reactQuillRef                 = useRef (null);
 	const [images, setImages]           = React.useState ([]);
 	const [form]                        = useForm ()
+	const [formCheckLists]              = useForm ();
+	
+	const [showCreateCheckList, setShowCreateCheckList]         = useState (false)
+	const [saving, setSaving]                                   = useState (false);
+	const [showForm, setShowForm]                               = useState ({
+		show : false,
+		id   : -1
+	})
+	const [valueInputCheckListItem, setValueInputCheckListItem] = useState ({
+		name        : "",
+		checklistID : -1
+	});
 	
 	const showModal    = () => {
 		setIsModalOpen (true);
@@ -127,6 +140,65 @@ const CardItem = ({card, part, index}) => {
 			}
 		}).catch (err => {
 			toast.error (err.response.data.message)
+		})
+	}
+	
+	const handleCreateCheckList = (values) => {
+		setSaving (true)
+		const data = {
+			name    : values.name,
+			card_id : card?.id
+		}
+		
+		createCheckList (data).then (res => {
+			setSaving (false);
+			if (res.data.code === 200) {
+				dispatch (addChecklist ({
+					card_id    : card?.id,
+					part_id    : part?.id,
+					checklists : res.data.data
+				}))
+				formCheckLists.resetFields ()
+				setShowCreateCheckList (false)
+			}
+		}).catch (err => {
+			setSaving (false)
+			toast.error (err.response.data.data.message)
+		})
+	}
+	
+	const handleChangeChecklistItem = (value, checklistID) => {
+		setValueInputCheckListItem ({
+			name        : value.target.value,
+			checklistID : checklistID,
+		})
+	}
+	
+	const handleCreateCheckListItem = () => {
+		setSaving (true)
+		const data = {
+			name          : valueInputCheckListItem.name,
+			check_list_id : valueInputCheckListItem.checklistID
+		}
+		createCheckListItem (data).then (res => {
+			setSaving (false)
+			if (res.data.code === 200) {
+				dispatch (addChecklistItem ({
+					part_id       : part?.id,
+					card_id       : card?.id,
+					check_list_id : valueInputCheckListItem.checklistID,
+					checkListItem : res.data.data
+				}))
+				setShowForm ({
+					show : false,
+					id   : -1
+				})
+			}
+			
+		}).catch (err => {
+			debugger
+			setSaving (false)
+			toast.error (err.response.data.data.message)
 		})
 	}
 	
@@ -316,8 +388,27 @@ const CardItem = ({card, part, index}) => {
 										}
 									</div>
 								</div>
+								<div className={ "my-6" }>
+									{
+										card?.checklists.length > 0 && <div>
+											{
+												card?.checklists?.map ((checklist, index) => (
+													<CheckList
+														checklist={ checklist }
+														key={ index }
+														setShowForm={ setShowForm }
+														showForm={ showForm }
+														setNameCheckListItem={ handleChangeChecklistItem }
+														handleClickSaveCheckListItem={ handleCreateCheckListItem }
+														saving={ saving }
+													/>
+												))
+											}
+										</div>
+									}
+								</div>
 								{
-									images?.length > 0 && <div className={ "flex items-start w-100 pe-6 gap-4" }>
+									images?.length > 0 && <div className={ "flex items-start w-100 gap-4" }>
 										<FontAwesomeIcon icon={ faPaperclip } size={ "lg" } className={ "mt-2" }/>
 										<div className={ "flex-1" }>
 											<div className={ "flex items-center justify-between" }>
@@ -378,7 +469,7 @@ const CardItem = ({card, part, index}) => {
 									</div>
 								}
 							</div>
-							<div className={ "flex justify-end mt-4 mx-6" }>
+							<div className={ "flex justify-end mt-4 ms-6" }>
 								<Button
 									type={ "primary" } htmlType={ "submit" } size={ "large" }
 								>Lưu thẻ</Button>
@@ -392,11 +483,16 @@ const CardItem = ({card, part, index}) => {
 							<p>Thêm thành viên</p>
 						</Button>
 						<Button block type={ "primary" } className={ "flex justify-start my-2 bg-[#3B444C]" }
-						        icon={ <FontAwesomeIcon icon={ faTag } size={ "sm" }/> }>
+						        icon={ <FontAwesomeIcon icon={ faTag } size={ "sm" }/> }
+						>
 							<p>Nhãn</p>
 						</Button>
 						<Button block type={ "primary" } className={ "flex justify-start my-2 bg-[#3B444C]" }
-						        icon={ <FontAwesomeIcon icon={ faCheck } size={ "sm" }/> }>
+						        icon={ <FontAwesomeIcon icon={ faCheck } size={ "sm" }/> }
+						        onClick={ () => {
+							        setShowCreateCheckList (true)
+						        } }
+						>
 							<p>Việc cần làm</p>
 						</Button>
 						<Button block type={ "primary" } className={ "flex justify-start my-2 bg-[#3B444C]" }
@@ -421,6 +517,28 @@ const CardItem = ({card, part, index}) => {
 							<p>Chia sẻ</p>
 						</Button>
 					</div>
+				</div>
+			</Modal>
+			<Modal
+				footer={ [] } width={ "300px" } open={ showCreateCheckList } onCancel={ () => {
+				setShowCreateCheckList (false)
+			} }
+			>
+				<div>
+					<Form form={ formCheckLists } className="nunito mt-4" onFinish={ handleCreateCheckList }
+					      layout={ "vertical" }>
+						<Form.Item label={ "Nhập tên việc" } name={ "name" } rules={ [
+							{
+								required : true,
+								message  : "Vui lòng nhập tên nhãn"
+							}
+						] }>
+							<Input variant={ "filled" }/>
+						</Form.Item>
+						<Button type='primary' disabled={ saving } htmlType='submit'>{
+							saving ? <Spin/> : "Thêm"
+						}</Button>
+					</Form>
 				</div>
 			</Modal>
 		</>
