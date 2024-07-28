@@ -43,7 +43,7 @@ const BoardDetail = () => {
 			if (res.data.code === 200) {
 				setSavingPart (false)
 				toast.success (res.data.message);
-				dispatch (addParts (res.data.data));
+				dispatch (addParts ({...res.data.data, cards : []}));
 				setShowFormAddPart (false)
 				form.resetFields ()
 			}
@@ -132,20 +132,20 @@ const BoardDetail = () => {
 		fetchListPart ()
 	}, [id]);
 	
-	useEffect(() => {
-		socket.onmessage = (event) =>  {
-			const data = JSON.parse(event.data);
+	useEffect (() => {
+		socket.onmessage = (event) => {
+			const data = JSON.parse (event.data);
 			console.log (data)
-			if (data && data.type === TYPE_TREELO_WEB_MEMBER){
-				if (data.data.action === ACTION_USER_ACCEPT_JOIN_BOARD && data.condition.board_id === id){
-					toast.success(`User : ${data.condition.user_id} join your board`)
+			if (data && data.type === TYPE_TREELO_WEB_MEMBER) {
+				if (data.data.action === ACTION_USER_ACCEPT_JOIN_BOARD && data.condition.board_id === id) {
+					toast.success (`User : ${ data.condition.user_id } join your board`)
 				}
 			}
 		}
 		return () => {
-			socket.close()
+			socket.close ()
 		}
-	},[])
+	}, [])
 	return (
 		<div>
 			{

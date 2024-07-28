@@ -38,7 +38,7 @@ const Part = ({
 				setShowForm (false)
 				dispatch (addCard ({
 					part_id : part.id,
-					data    : res.data.data,
+					data    : {...res.data.data,attachments:[],checklists:[]},
 				}));
 				form.resetFields ()
 			}
