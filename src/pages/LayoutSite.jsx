@@ -128,7 +128,7 @@ const LayoutSite               = () => {
 	}, []);
 	
 	return (
-		<Layout className="min-h-screen nunito">
+		<Layout className="nunito fixed bottom-0 top-0 right-0 left-0">
 			<Layout>
 				<Header
 					style={ {
@@ -160,7 +160,7 @@ const LayoutSite               = () => {
 						<FontAwesomeIcon icon={ faBell } size={ "lg" } className={ "me-4" }/>
 						<p className="font-bold me-4">{ getUserFromLocalStorage ()?.name }</p>
 						<Avatar
-							src={ "https://mymodernmet.com/wp/wp-content/uploads/2020/10/cooper-baby-corgi-dogs-8.jpg" }
+							src={ getUserFromLocalStorage()?.avatar }
 							className={ "me-2" }/>
 						<Button
 							type="text"
@@ -230,7 +230,7 @@ const LayoutSite               = () => {
 							borderRadius    : borderRadiusLG,
 							zIndex          : 1
 						} }
-						className="nunito"
+						className="nunito overflow-y-scroll"
 					>
 						<Routes>
 							<Route path="/dashboard" element={ <DashBoard/> }/>

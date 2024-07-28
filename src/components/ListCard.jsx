@@ -16,7 +16,7 @@ const ListCard = ({part,index}) => {
 					{ ...providedCard.droppableProps }
 				>
 					{
-						part.cards.map ((card, index) =>
+						part.cards?.map ((card, index) =>
 							<CardItem card={card} part={part} index={index}/>
 						)
 					}

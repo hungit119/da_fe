@@ -225,7 +225,7 @@ const CardItem = ({card, part, index}) => {
 							card.attachments?.find (att => att.type === 1)?.url &&
 							<div>
 								<Image src={ card.attachments?.find (att => att.type === 1)?.url }
-								       className={ "rounded-xl" } preview={ false }/>
+								       className={ "rounded-xl object-cover" } preview={ false } width={256} height={150} />
 							</div>
 						}
 						<div className={ "flex flex-col p-2" }>
@@ -390,7 +390,7 @@ const CardItem = ({card, part, index}) => {
 								</div>
 								<div className={ "my-6" }>
 									{
-										card?.checklists.length > 0 && <div>
+										card?.checklists?.length > 0 && <div>
 											{
 												card?.checklists?.map ((checklist, index) => (
 													<CheckList
