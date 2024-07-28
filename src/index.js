@@ -15,6 +15,9 @@ root.render (
 		<BrowserRouter>
 			<ConfigProvider
 				theme={ {
+					token:{
+						colorText:"#B6C2CF",
+					},
 					components : {
 						Menu:{
 							colorPrimary : '#1C2B41',
@@ -27,12 +30,16 @@ root.render (
 						Input: {
 							activeBg:"#22272B",
 							colorBgTextActive:"#22272B",
-							colorText:"#B2BFCB"
+							colorBorder:"#85B8FF",
+							colorTextL:"#B6C2CF",
+							colorTextPlaceholder:"#B6C2CF"
 						},
 						Modal: {
 							contentBg:"#323940",
 							colorText:"#B6C2CF",
-						}
+							colorTextBase:"#B6C2CF",
+							colorIcon:"#FFFFFF"
+						},
 					},
 				} }
 			>

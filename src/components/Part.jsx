@@ -51,7 +51,7 @@ const Part = ({
 		<Draggable key={part.id} draggableId={ `part-${ part.id }` }
 		           index={ index }>
 			{ (provided, snapshot) => (
-				<div className={ `${snapshot.isDragging ? "bg-transparent backdrop-blur-lg" : ""} min-w-[272px] bg-[#101204] shadow-lg rounded-xl pb-4 pt-4 ps-4 pe-3 text-white` }
+				<div className={ `${snapshot.isDragging ? "opacity-70" : ""} min-w-[272px] bg-[#101204] shadow-lg rounded-xl pb-4 pt-4 ps-4 pe-3 text-white` }
 				     ref={ provided.innerRef } { ...provided.draggableProps }
 				>
 					<div className={ "flex justify-between items-center" } { ...provided.dragHandleProps }

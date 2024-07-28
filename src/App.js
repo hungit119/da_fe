@@ -6,6 +6,7 @@ import Site from './pages/Site';
 import LayoutSite from './pages/LayoutSite';
 
 function App () {
+	
 	return (
 		<div className="min-h-screen ">
 			<Routes>

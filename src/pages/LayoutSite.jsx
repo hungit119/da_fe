@@ -4,14 +4,22 @@ import {
 	MenuUnfoldOutlined, PlusOutlined, PlusSquareOutlined,
 	UserOutlined,
 } from "@ant-design/icons";
-import { faTruckFast } from "@fortawesome/free-solid-svg-icons";
+import {
+	faBell,
+	faContactCard,
+	faCreditCard, faPlus,
+	faRing,
+	faTree,
+	faTruckFast, faUser,
+	faUsers
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Button, Collapse, Form, Image, Input, Layout, Menu, Modal, Select, Spin, theme, Upload } from "antd";
+import { Avatar, Button, Collapse, Form, Image, Input, Layout, Menu, Modal, Select, Spin, theme, Upload } from "antd";
 import React, { useEffect, useState } from "react";
 import { CiBoxList, CiSettings } from "react-icons/ci";
 import { IoHomeOutline } from "react-icons/io5";
 import { LuLogOut } from "react-icons/lu";
-import { Link, Route, Routes } from "react-router-dom";
+import { Link, NavLink, Route, Routes } from "react-router-dom";
 import { clearDataFromLocalStorage, getUserFromLocalStorage } from "../session";
 import DashBoard from "./DashBoard";
 import Profile from "./Profile";
@@ -101,96 +109,67 @@ const LayoutSite               = () => {
 	      } = theme.useToken ();
 	
 	const fetchListBoard = () => {
-		setLoading(true)
+		setLoading (true)
 		const param = {
-			user_id: getUserFromLocalStorage()?.id
+			user_id : getUserFromLocalStorage ()?.id
 		}
-		getListBoard(param).then(res => {
+		getListBoard (param).then (res => {
 			if (res.data.code === 200) {
-				setLoading(false);
-				dispatch(setBoards(res.data.data))
+				setLoading (false);
+				dispatch (setBoards (res.data.data))
 			}
-		}).catch(err => {
-			console.log(err)
+		}).catch (err => {
+			console.log (err)
 		})
 	}
 	
-	useEffect(() => {
-		fetchListBoard();
+	useEffect (() => {
+		fetchListBoard ();
 	}, []);
 	
 	return (
 		<Layout className="min-h-screen nunito">
-			<Sider trigger={ null } collapsible collapsed={ collapsed }>
-				<div className="px-2 py-4 flex items-end">
-					<FontAwesomeIcon
-						icon={ faTruckFast }
-						color="white"
-						className="text-5xl me-3"
-					/>
-					<p className="text-2xl font-bold text-white">TreClone</p>
-				</div>
-				<Menu
-					theme="dark"
-					mode="inline"
-					defaultSelectedKeys={ ["1"] }
-					className="nunito over"
-				>
-					<Menu.Item key="1" icon={ <IoHomeOutline/> }>
-						<Link to="/dashboard">Bảng</Link>
-					</Menu.Item>
-					<Menu.Item key="2" icon={ <UserOutlined/> }>
-						<Link to="/profile">Mẫu</Link>
-					</Menu.Item>
-					<Menu.Item key="3" icon={ <CiSettings/> }>
-						<Link to="/setting">Trang chủ</Link>
-					</Menu.Item>
-					<div className={ "p-4 font-bold flex justify-between items-center" }>
-						<p>Các bảng của bạn</p>
-						<Button type={ "primary" } icon={ <PlusOutlined className={ "cursor-pointer" }/> }
-						        onClick={ showModal }/>
-					</div>
-					{
-						listBoard.length > 0 && listBoard.map((item) => <Menu.Item key={item.id}>
-							<Link to={ `/board/${item.id}` }>{item.name}</Link>
-						</Menu.Item>)
-					}
-				</Menu>
-			</Sider>
 			<Layout>
 				<Header
 					style={ {
-						padding    : 0,
-						background : colorBgContainer,
-						backgroundColor:"#1D2125",
-						color:"white",
-						height:"48px",
-						zIndex:9999,
+						padding         : 0,
+						background      : colorBgContainer,
+						backgroundColor : "#1D2125",
+						color           : "white",
+						height          : "48px",
+						zIndex          : 9999,
 					} }
-					className="flex justify-between items-center nunito"
+					className="flex justify-between items-center nunito border border-r-0 border-l-0 border-gray-600"
 				>
-					<Button
-						type="text"
-						icon={ collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined /> }
-						onClick={ () => setCollapsed (!collapsed) }
-						style={ {
-							fontSize : "16px",
-							width    : 64,
-							height   : 64,
-							color:"white"
-						} }
-					/>
-					<div className="flex">
-						<p className="font-bold me-2">{ getUserFromLocalStorage ()?.name }</p>
+					<div className={ "flex items-center" }>
+						<Button
+							type="text"
+							icon={ collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/> }
+							onClick={ () => setCollapsed (!collapsed) }
+							style={ {
+								fontSize : "16px",
+								width    : 64,
+								height   : 64,
+								color    : "white"
+							} }
+						/>
+						<FontAwesomeIcon icon={ faTree } size={ "lg" } className={ "me-4" }/>
+						<p className={ "text-2xl font-bold" }>Treelo</p>
+					</div>
+					<div className="flex items-center">
+						<FontAwesomeIcon icon={ faBell } size={ "lg" } className={ "me-4" }/>
+						<p className="font-bold me-4">{ getUserFromLocalStorage ()?.name }</p>
+						<Avatar
+							src={ "https://mymodernmet.com/wp/wp-content/uploads/2020/10/cooper-baby-corgi-dogs-8.jpg" }
+							className={ "me-2" }/>
 						<Button
 							type="text"
 							icon={ <LuLogOut/> }
 							style={ {
 								fontSize : "16px",
-								width    : 64,
-								height   : 64,
-								color:"white"
+								color    : "white"
 							} }
+							className={ "me-2" }
 							onClick={ () => {
 								clearDataFromLocalStorage ();
 								window.location.href = "/login";
@@ -198,25 +177,71 @@ const LayoutSite               = () => {
 						/>
 					</div>
 				</Header>
-				<Content
-					style={ {
-						minHeight    : 280,
-						background   : colorBgContainer,
-						backgroundColor:"#1D2125",
-						borderRadius : borderRadiusLG,
-						zIndex:1
-					} }
-					className="nunito"
-				>
-					<Routes>
-						<Route path="/dashboard" element={ <DashBoard/> }/>
-						<Route path="/profile" element={ <Profile/> }/>
-						<Route path="/setting" element={ <Setting/> }/>
-						<Route path="/board/:id" element={ <BoardDetail/> }/>
-					</Routes>
-				</Content>
+				<Layout>
+					<Sider style={ {backgroundColor : "#1B1F23"} }
+					       className={ "nunito border border-l-0 border-t-0 border-gray-600" }
+					       trigger={ null } collapsible collapsed={ collapsed }
+					       collapsedWidth={ 16 }
+					>
+						<nav className={ "flex flex-col py-4 text-[#8C9BAB]" }>
+							<NavLink to={ "/dashboard" }
+							         className={ "grid grid-cols-3 items-baseline px-4 py-2 hover:bg-[#3C3F42]" }>
+								<FontAwesomeIcon icon={ faCreditCard } size={ "sm" } className={ "me-4" }/>
+								<p className={ "font-bold" }>Bảng</p>
+							</NavLink>
+							<NavLink to={ "/member" }
+							         className={ "grid grid-cols-3 items-baseline px-4 py-2 hover:bg-[#3C3F42]" }>
+								<FontAwesomeIcon
+									icon={ faUsers } size={ "sm" }
+									className={ "me-4" }/> <p
+								className={ "font-bold" }>Member</p>
+							</NavLink>
+							<NavLink to={ "/profile" }
+							         className={ "grid grid-cols-3 items-baseline px-4 py-2 hover:bg-[#3C3F42]" }>
+								<FontAwesomeIcon
+									icon={ faUser } size={ "sm" }
+									className={ "me-4" }/>
+								<p className={ "font-bold" }>Profile</p>
+							</NavLink>
+							<div className={ "flex justify-between items-center px-4 py-2" }>
+								<p className={ "text-[#8C9BAB] font-bold" }>Các bản của bạn</p>
+								<Button type={ "primary" } icon={ <FontAwesomeIcon icon={ faPlus }/> } size={ "small" }
+								        className={ "bg-transparent" }
+								        onClick={ showModal }
+								/>
+							</div>
+							{
+								listBoard?.length > 0 && listBoard.map ((item,index) => <NavLink
+									key={index}
+									className={ "flex items-center px-4 py-2 hover:bg-[#3C3F42]" }
+									to={ `/board/${ item.id }` }>
+									<Image preview={false} width={ 32 } height={ 20 } className={ "object-cover rounded-sm" }
+									       src={ item?.avatar ?? "https://flowbite.com/docs/images/examples/image-1@2x.jpg" }/>
+									<p className={"ms-2 line-clamp-1"}>{ item.name }</p>
+								</NavLink>)
+							}
+						</nav>
+					</Sider>
+					<Content
+						style={ {
+							minHeight       : 280,
+							background      : colorBgContainer,
+							backgroundColor : "#1D2125",
+							borderRadius    : borderRadiusLG,
+							zIndex          : 1
+						} }
+						className="nunito"
+					>
+						<Routes>
+							<Route path="/dashboard" element={ <DashBoard/> }/>
+							<Route path="/profile" element={ <Profile/> }/>
+							<Route path="/setting" element={ <Setting/> }/>
+							<Route path="/board/:id" element={ <BoardDetail/> }/>
+						</Routes>
+					</Content>
+				</Layout>
 			</Layout>
-			<Modal className='nunito' width={ "304px" } title="Basic Modal" open={ isModalOpen }
+			<Modal className='nunito text-white' width={ "304px" } open={ isModalOpen }
 			       onCancel={ handleCancel }
 			       footer={ [] }
 			>
@@ -236,7 +261,7 @@ const LayoutSite               = () => {
 							onChange={ handleChange }
 						>
 							{
-								loadingUpload ? <LoadingOutlined/> : <p>Upload</p>
+								loadingUpload ? <LoadingOutlined/> : <p className={ "text-white" }>Upload</p>
 							}
 						</Upload>
 						{ imageUrl && (
@@ -258,9 +283,12 @@ const LayoutSite               = () => {
 					onFinish={ onFinish }
 					onFinishFailed={ onFinishFailed }
 					autoComplete="off"
+					className={ "nunito text-white" }
 				>
+					<div className={ "flex items-center" }>
+						<p className={ "py-2 pe-2" }>Tiêu đề bảng</p> <span className={ "text-red-600" }>*</span>
+					</div>
 					<Form.Item
-						label="Tiêu đề bảng"
 						name="name"
 						rules={ [
 							{
@@ -269,11 +297,13 @@ const LayoutSite               = () => {
 							},
 						] }
 					>
-						<Input/>
+						<Input placeholder={ "Tiieu đề bảng" }/>
 					</Form.Item>
 					
+					<div className={ "flex items-center" }>
+						<p className={ "py-2 pe-2" }>Quyền xem</p> <span className={ "text-red-600" }>*</span>
+					</div>
 					<Form.Item
-						label="Quyền xem"
 						name="type"
 						rules={ [
 							{

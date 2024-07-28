@@ -58,3 +58,21 @@ export const getListCard = (params) => {
 export const updatePositionPartCard = (params) => {
 	return axiosInstance.post("/v1/update-part-card", params)
 }
+export const saveCard = (params) => {
+	return axiosInstance.post("/v1/save-card", params)
+}
+
+// checklist
+
+export const createCheckList = (params) => {
+	return axiosInstance.post("/v1/create-checklist", params)
+}
+
+
+// checklist item
+export const createCheckListItem = (params) => {
+	return axiosInstance.post("/v1/create-checklist-item", params)
+}
+export const updateCheckListItem = (params) => {
+	return axiosInstance.post("/v1/update-checklist-item", params)
+}

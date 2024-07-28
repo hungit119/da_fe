@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { createPart, getBoard, getListPart, updatePositionPartCard, updatePositionParts } from "../service";
 import { useDispatch, useSelector } from "react-redux";
 import { setBoard } from "../features/board/boardSlice";
-import { Avatar, Button, Form, Input, Spin } from "antd";
+import { Avatar, Button, Form, Image, Input, Spin } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEarth, faPlus, faShare, faStar, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { getUserFromLocalStorage } from "../session";
@@ -13,6 +13,8 @@ import { addParts, setParts } from "../features/part/partSlice";
 import { LoadingOutlined } from "@ant-design/icons";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import Part from "../components/Part";
+import socket from "../webSocket";
+import { ACTION_USER_ACCEPT_JOIN_BOARD, TYPE_TREELO_WEB_MEMBER } from "../constant";
 
 const BoardDetail = () => {
 	
@@ -75,6 +77,7 @@ const BoardDetail = () => {
 	}
 	const onDragEnd        = (result) => {
 		if (!result.destination) return;
+		if (result.source.droppableId === result.destination.droppableId) return;
 		if (result.type === "PART") {
 			const array      = Array.from (parts);
 			const startIndex = result.source.index;
@@ -109,16 +112,16 @@ const BoardDetail = () => {
 				...part, cards : sourceCards
 			} : part.id === destinationPart.id ? {...part, cards : destinationCards} : part ))
 			
-			dispatch(setParts(newParts))
+			dispatch (setParts (newParts))
 			
 			const data = {
-				card_id : cardID,
-				source_part_id: sourcePart.id,
-				destination_part_id: destinationPart.id,
+				card_id             : cardID,
+				source_part_id      : sourcePart.id,
+				destination_part_id : destinationPart.id,
 			}
-			updatePositionPartCard(data).then((res => {
+			updatePositionPartCard (data).then (( res => {
 				console.log (res)
-			})).catch(err => {
+			} )).catch (err => {
 				console.log (err)
 			})
 		}
@@ -128,6 +131,21 @@ const BoardDetail = () => {
 		fetchBoardDetail ();
 		fetchListPart ()
 	}, [id]);
+	
+	useEffect(() => {
+		socket.onmessage = (event) =>  {
+			const data = JSON.parse(event.data);
+			console.log (data)
+			if (data && data.type === TYPE_TREELO_WEB_MEMBER){
+				if (data.data.action === ACTION_USER_ACCEPT_JOIN_BOARD && data.condition.board_id === id){
+					toast.success(`User : ${data.condition.user_id} join your board`)
+				}
+			}
+		}
+		return () => {
+			socket.close()
+		}
+	},[])
 	return (
 		<div>
 			{
@@ -154,9 +172,10 @@ const BoardDetail = () => {
 								<Button type={ "text" } className={ "me-2" }
 								        icon={ <FontAwesomeIcon icon={ faEarth } width={ 20 } color={ "white" }/> }/>
 							</div>
-							<div className={ "flex items-end justify-end" }>
-								<Avatar className={ "rounded-full p-1 border-gray-400 me-2 cursor-pointer" }
-								        src={ getUserFromLocalStorage ()?.avatar ? getUserFromLocalStorage ()?.avatar : AvatarDefault }/>
+							<div className={ "flex items-center justify-end" }>
+								<Image width={ 42 } height={ 42 }
+								       className={ "rounded-full p-1 border-gray-400 me-2 cursor-pointer object-cover" }
+								       src={ getUserFromLocalStorage ()?.avatar ? getUserFromLocalStorage ()?.avatar : AvatarDefault }/>
 								<Button icon={ <FontAwesomeIcon icon={ faShare }/> } className={ "nunito" }>Chia
 								                                                                            sẻ</Button>
 							</div>

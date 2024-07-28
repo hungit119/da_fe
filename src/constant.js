@@ -15,3 +15,5 @@ export const TYPE_BOARD_OPTIONS = [
   }
 ]
 export const ACCESS_TOKEN_LOCALSTORAGE = "access_token";
+export const TYPE_TREELO_WEB_MEMBER = "TREELO_WEB_MEMBER";
+export const ACTION_USER_ACCEPT_JOIN_BOARD = "ACTION_USER_ACCEPT_JOIN_BOARD"
