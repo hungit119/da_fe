@@ -156,7 +156,7 @@ const CardItem = ({card, part, index}) => {
 				dispatch (addChecklist ({
 					card_id    : card?.id,
 					part_id    : part?.id,
-					checklists : res.data.data
+					checklists : {...res.data.data,check_list_items:[]}
 				}))
 				formCheckLists.resetFields ()
 				setShowCreateCheckList (false)

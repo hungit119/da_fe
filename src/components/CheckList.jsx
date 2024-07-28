@@ -47,11 +47,26 @@ const CheckList = ({
 			</div>
 			<div className={ "my-2" }>
 				<Progress
-					percent={ checklist?.check_list_items?.length <= 0 ? 0 : ((  checklist?.check_list_items?.filter (item => item?.is_checked).length ) / checklist?.check_list_items?.length) * 100 }
+					percent={ checklist?.check_list_items?.length <= 0 ? 0 : ( ( checklist?.check_list_items?.filter (item => item?.is_checked).length ) / checklist?.check_list_items?.length ) * 100 }
 					percentPosition={ {
 						type  : "outer",
 						align : "start"
 					} }/>
+			</div>
+			<div>
+				{
+					checklist?.check_list_items?.length > 0 && <>
+						{
+							checklist?.check_list_items?.map ((checklistItem, index) => (
+								<div key={ index } className={ "flex items-center my-4" }>
+									<Checkbox onChange={ (e) => handleChangeCheckBox (e, checklistItem?.id) }
+									          checked={ checklistItem?.is_checked } className={ "me-2" }/>
+									<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }>{ checklistItem?.name }</p>
+								</div>
+							))
+						}
+					</>
+				}
 			</div>
 			{
 				showForm.show && showForm.id === checklist.id ?
@@ -73,21 +88,6 @@ const CheckList = ({
 						}) }>Hủy</Button>
 					</div>
 					: <div>
-						<div>
-							{
-								checklist?.check_list_items?.length > 0 && <>
-									{
-										checklist?.check_list_items?.map ((checklistItem, index) => (
-											<div key={ index } className={ "flex items-center my-4" }>
-												<Checkbox onChange={ (e) => handleChangeCheckBox (e, checklistItem?.id) }
-												          checked={ checklistItem?.is_checked } className={ "me-2" }/>
-												<p className={`${checklistItem?.is_checked ? 'line-through' : ''}`}>{ checklistItem?.name }</p>
-											</div>
-										))
-									}
-								</>
-							}
-						</div>
 						<Button type={ "primary" } onClick={ () => setShowForm ({
 							show : true,
 							id   : checklist.id,
