@@ -84,3 +84,8 @@ export const getUserInfoFromGoogle = (params) => {
 export const signInWithGoogle      = (params) => {
 	return axiosInstance.post ('/sign-in-with-google', params)
 }
+
+// user
+export const inviteUserToBoard = (params) => {
+	return axiosInstance.post ("/v1/invite-user-to-board", params)
+}

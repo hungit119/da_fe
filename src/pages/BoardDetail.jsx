@@ -1,33 +1,64 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from "react-router-dom";
-import { createPart, getBoard, getListPart, updatePositionPartCard, updatePositionParts } from "../service";
+import {
+	createPart,
+	getBoard,
+	getListPart,
+	inviteUserToBoard,
+	updatePositionPartCard,
+	updatePositionParts
+} from "../service";
 import { useDispatch, useSelector } from "react-redux";
 import { setBoard } from "../features/board/boardSlice";
-import { Avatar, Button, Form, Image, Input, Spin } from "antd";
+import { Avatar, Button, Form, Image, Input, Modal, Select, Spin, Tabs } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEarth, faPlus, faShare, faStar, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { getUserFromLocalStorage } from "../session";
 import AvatarDefault from "../assets/avatar.jpg"
 import { toast } from "react-toastify";
 import { addParts, setParts } from "../features/part/partSlice";
-import { LoadingOutlined } from "@ant-design/icons";
+import { LoadingOutlined, UserAddOutlined, UserOutlined } from "@ant-design/icons";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import Part from "../components/Part";
 import socket from "../webSocket";
-import { ACTION_USER_ACCEPT_JOIN_BOARD, TYPE_TREELO_WEB_MEMBER } from "../constant";
+import { ACTION_USER_ACCEPT_JOIN_BOARD, LIST_ROLE_NAME, optionListRoles, TYPE_TREELO_WEB_MEMBER } from "../constant";
 
 const BoardDetail = () => {
 	
-	let {id}                                    = useParams ();
-	const dispatch                              = useDispatch ();
-	const board                                 = useSelector ((state) => state.board.board);
-	const parts                                 = useSelector ((state) => state.part.parts);
-	const [loading, setLoading]                 = React.useState (false);
-	const [savingPart, setSavingPart]           = React.useState (false);
-	const [fetchingPart, setFetchingPart]       = React.useState (true);
-	const [showFormAddPart, setShowFormAddPart] = React.useState (false);
+	let {id}                                      = useParams ();
+	const dispatch                                = useDispatch ();
+	const board                                   = useSelector ((state) => state.board.board);
+	const parts                                   = useSelector ((state) => state.part.parts);
+	const [loading, setLoading]                   = React.useState (false);
+	const [savingPart, setSavingPart]             = React.useState (false);
+	const [fetchingPart, setFetchingPart]         = React.useState (true);
+	const [showFormAddPart, setShowFormAddPart]   = React.useState (false);
+	const [isModalShareOpen, setIsModalShareOpen] = useState (false);
 	
 	const [form] = Form.useForm ();
+	
+	const handleCancel      = () => {
+		setIsModalShareOpen (false);
+	};
+	const handleFinishShare = (values) => {
+		const data = {
+			'email_receiver' : values.email,
+			'role_id':values.role_id,
+			'board_id' : board?.id,
+			'board_name': board?.name,
+			'user_invite_name': getUserFromLocalStorage()?.name,
+			'user_invite_email': getUserFromLocalStorage()?.email,
+		}
+		
+		inviteUserToBoard(data).then(res => {
+			console.log (res)
+			if (res.data.code === 200){
+			
+			}
+		}).catch(err => {
+			console.log (err)
+		})
+	}
 	
 	const onFinish = (values) => {
 		if (!values.name) {
@@ -77,7 +108,6 @@ const BoardDetail = () => {
 	}
 	const onDragEnd        = (result) => {
 		if (!result.destination) return;
-		if (result.source.droppableId === result.destination.droppableId) return;
 		if (result.type === "PART") {
 			const array      = Array.from (parts);
 			const startIndex = result.source.index;
@@ -98,7 +128,9 @@ const BoardDetail = () => {
 		if (result.type === "CARD") {
 			const sourcePart      = parts?.find ((part) => part?.id === Number (result.source.droppableId.split ("-")[1]))
 			const destinationPart = parts?.find ((part) => part?.id === Number (result.destination.droppableId.split ("-")[1]))
-			const cardID          = Number (result.draggableId.split ("-")[1])
+			
+			if (sourcePart === destinationPart) return;
+			const cardID = Number (result.draggableId.split ("-")[1])
 			
 			const sourceCards      = Array.from (sourcePart.cards)
 			const destinationCards = Array.from (destinationPart.cards)
@@ -176,8 +208,10 @@ const BoardDetail = () => {
 								<Image width={ 42 } height={ 42 }
 								       className={ "rounded-full p-1 border-gray-400 me-2 cursor-pointer object-cover" }
 								       src={ getUserFromLocalStorage ()?.avatar ? getUserFromLocalStorage ()?.avatar : AvatarDefault }/>
-								<Button icon={ <FontAwesomeIcon icon={ faShare }/> } className={ "nunito" }>Chia
-								                                                                            sẻ</Button>
+								<Button icon={ <FontAwesomeIcon icon={ faShare }/> } className={ "nunito" }
+								        onClick={ () => setIsModalShareOpen (true) }
+								>Chia
+								 sẻ</Button>
 							</div>
 						</div>
 						<div className={ "p-4 overflow-x-scroll h-[92%]" }>
@@ -242,6 +276,88 @@ const BoardDetail = () => {
 					</div>
 				</div>
 			}
+			<Modal
+				footer={[]}
+				className={ "nunito" } title="Mời thành viên vào bảng của bạn" open={ isModalShareOpen }
+			       onCancel={ handleCancel }>
+				<Form onFinish={ handleFinishShare }
+				      layout={ "vertical" }
+				      className={ "flex items-center justify-between" }
+				>
+					<Form.Item name={ "email" } className={ "me-2" }>
+						<Input rootClassName={ "nunito py-2" } placeholder={ "Nhập địa chỉ email" }
+						       variant={ "filled" }/>
+					</Form.Item>
+					<Form.Item name={ "role_id" }
+					           className={ "me-2" }
+					           initialValue={ optionListRoles[0] }
+					>
+						<Select
+							options={ optionListRoles }
+						>
+						</Select>
+					</Form.Item>
+					<Form.Item>
+						<Button type={ "primary" } htmlType={ "submit" } size={ "large" }>Chia sẻ</Button>
+					</Form.Item>
+				</Form>
+				<Tabs
+					rootClassName={ "nunito" } defaultActiveKey="1" items={ [
+					{
+						key      : '1',
+						label    : 'Thành viên bảng' + ` (${ board?.users?.filter (user => Number (user?.pivot?.status_accept) === 1)?.length })`,
+						children : <div>
+							{
+								board?.users?.filter (user => Number (user?.pivot?.status_accept) === 1).map ((user) =>
+									<div className={ "flex items-center justify-between my-2" }>
+										<div className={ "flex items-center" }>
+											<Avatar src={ user?.avatar ?? AvatarDefault } className={ "me-2" }/>
+											<div>
+												<p>{ user?.name } { user?.id === getUserFromLocalStorage ()?.id ? "(Bạn)" : "" }</p>
+												<p>{ user?.email }</p>
+											</div>
+										</div>
+										<div className={ "p-2 bg-gray-800 rounded-lg" }>
+											{
+												LIST_ROLE_NAME[user?.pivot?.role_id]
+											}
+										</div>
+									</div>)
+							}
+						</div>,
+					},
+					{
+						key      : '2',
+						label    : 'Yêu cầu tham gia bảng' + ` (${ board?.users?.filter (user => Number (user?.pivot?.status_accept) === 0)?.length })`,
+						children : <div>
+							{
+								board?.users?.filter (user => Number (user?.pivot?.status_accept) === 0)?.length > 0 ?
+									
+									board?.users?.filter (user => Number (user?.pivot?.status_accept) === 0).map ((user) =>
+										<div className={ "flex items-center justify-between my-2" }>
+											<div className={ "flex items-center" }>
+												<Avatar src={ user?.avatar ?? AvatarDefault } className={ "me-2" }/>
+												<div>
+													<p>{ user?.name }</p>
+													<p>{ user?.email }</p>
+												</div>
+											</div>
+											<div className={ "p-2 bg-gray-800 rounded-lg" }>
+												{
+													LIST_ROLE_NAME[user?.pivot?.role_id]
+												}
+											</div>
+										</div>) : <div className={"flex flex-col items-center justify-between py-4" }>
+										<UserOutlined className={"mb-4"} />
+										<p>Không có yêu cầu tham gia</p>
+									</div>
+							}
+						</div>,
+					},
+				] } onChange={ () => {
+				
+				} }/>
+			</Modal>
 		</div>
 	);
 };

@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
 	boards : [],
-	board  : {}
+	board  : {},
 }
 
 export const boardSlice = createSlice ({

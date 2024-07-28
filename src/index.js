@@ -44,12 +44,15 @@ root.render (
 							contentBg     : "#323940",
 							colorText     : "#B6C2CF",
 							colorTextBase : "#B6C2CF",
-							colorIcon     : "#FFFFFF"
+							colorIcon     : "#FFFFFF",
+							titleColor    : "#B6C2CF",
+							headerBg       :"#323940"
 						},
 					},
 				} }
 			>
-				<GoogleOAuthProvider clientId="638168424574-5q1bo9m9jhihi6nv0vims5on0u1i6c9k.apps.googleusercontent.com">
+				<GoogleOAuthProvider
+					clientId="638168424574-5q1bo9m9jhihi6nv0vims5on0u1i6c9k.apps.googleusercontent.com">
 					<App/>
 				</GoogleOAuthProvider>;
 			</ConfigProvider>
