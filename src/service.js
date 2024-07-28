@@ -73,3 +73,6 @@ export const createCheckList = (params) => {
 export const createCheckListItem = (params) => {
 	return axiosInstance.post("/v1/create-checklist-item", params)
 }
+export const updateCheckListItem = (params) => {
+	return axiosInstance.post("/v1/update-checklist-item", params)
+}

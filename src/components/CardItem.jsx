@@ -401,6 +401,8 @@ const CardItem = ({card, part, index}) => {
 														setNameCheckListItem={ handleChangeChecklistItem }
 														handleClickSaveCheckListItem={ handleCreateCheckListItem }
 														saving={ saving }
+														part_id={part?.id}
+														card_id={card?.id}
 													/>
 												))
 											}
