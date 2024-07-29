@@ -26,11 +26,11 @@ const Login = () => {
 	useEffect (() => {
 		const accessToken = getTokenFromLocalStorage ();
 		if (accessToken) {
-			navigate ("/dashboard");
+			navigate ("/");
 		}
 	}, []);
 	
-	const onFinish = (values) => {
+	const onFinish        = (values) => {
 		setSaving (true)
 		login ({
 			email    : values.email,
@@ -43,7 +43,7 @@ const Login = () => {
 					axios.defaults.headers.common['token'] = res?.data?.data?.access_token;
 					addDataToLocalStorage ("access_token", res?.data?.data?.access_token);
 					addDataToLocalStorage ("user", res?.data?.data?.user);
-					navigate ("/dashboard");
+					navigate ("/");
 				}
 			})
 			.catch ((err) => {
@@ -51,18 +51,18 @@ const Login = () => {
 				toast.error (JSON.stringify (err?.response));
 			});
 	};
-	const loginWithGoogle = useGoogleLogin({
-		onSuccess: tokenResponse => {
+	const loginWithGoogle = useGoogleLogin ({
+		onSuccess : tokenResponse => {
 			setSaving (true)
 			const accessToken = tokenResponse.access_token
 			if (accessToken) {
-				getUserInfoFromGoogle({
-					access_token: accessToken,
-				}).then(res => {
-					if (res.data){
-						const email = res.data.email;
-						const avatar = res.data.picture
-						const name = res.data.family_name
+				getUserInfoFromGoogle ({
+					access_token : accessToken,
+				}).then (res => {
+					if (res.data) {
+						const email      = res.data.email;
+						const avatar     = res.data.picture
+						const name       = res.data.family_name
 						const given_name = res.data.given_name
 						
 						const data = {
@@ -71,21 +71,21 @@ const Login = () => {
 							name,
 							given_name
 						}
-						signInWithGoogle(data).then((res) => {
+						signInWithGoogle (data).then ((res) => {
 							if (res.data.code === 200) {
 								setSaving (false)
 								toast.success (res?.data?.message);
 								axios.defaults.headers.common['token'] = res?.data?.data?.access_token;
 								addDataToLocalStorage ("access_token", res?.data?.data?.access_token);
 								addDataToLocalStorage ("user", res?.data?.data?.user);
-								navigate ("/dashboard");
+								navigate ("/");
 							}
-						}).catch(err => {
+						}).catch (err => {
 							setSaving (false)
-							toast.error(JSON.stringify (err?.response))
+							toast.error (JSON.stringify (err?.response))
 						})
 					}
-				}).catch(err => {
+				}).catch (err => {
 					setSaving (false)
 					toast.error (JSON.stringify (err.response));
 				})
@@ -120,11 +120,11 @@ const Login = () => {
 						</Form.Item>
 					</Form>
 					<div className={ "text-center text-sm" }>Hoặc</div>
-					<div className={"grid grid-cols-2 items-center gap-2"}>
+					<div className={ "grid grid-cols-2 items-center gap-2" }>
 						<div>
 							<Button className={ "bg-rose-600 my-2" } type={ "primary" } block size={ "large" }
 							        icon={ <GoogleOutlined/> }
-							        onClick={() => loginWithGoogle()}
+							        onClick={ () => loginWithGoogle () }
 							>Sign in with Google</Button>
 						</div>
 						<div>

@@ -184,7 +184,7 @@ const LayoutSite               = () => {
 					       collapsedWidth={ 16 }
 					>
 						<nav className={ "flex flex-col py-4 text-[#8C9BAB]" }>
-							<NavLink to={ "/dashboard" }
+							<NavLink to={ "/" }
 							         className={ "grid grid-cols-3 items-baseline px-4 py-2 hover:bg-[#3C3F42]" }>
 								<FontAwesomeIcon icon={ faCreditCard } size={ "sm" } className={ "me-4" }/>
 								<p className={ "font-bold" }>Bảng</p>
@@ -233,7 +233,7 @@ const LayoutSite               = () => {
 						className="nunito overflow-y-scroll"
 					>
 						<Routes>
-							<Route path="/dashboard" element={ <DashBoard/> }/>
+							<Route path="/" element={ <DashBoard/> }/>
 							<Route path="/profile" element={ <Profile/> }/>
 							<Route path="/setting" element={ <Setting/> }/>
 							<Route path="/board/:id" element={ <BoardDetail/> }/>

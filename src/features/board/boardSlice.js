@@ -26,6 +26,10 @@ export const boardSlice = createSlice ({
 		},
 		addBoard         : (state, action) => {
 			state.boards.unshift (action.payload)
+		},
+		setUserBoardActive : (state, action) => {
+			console.log ("action",action.payload)
+			state.board = {...state.board,users : state.board?.users?.map(user=> user.id === action.payload.user_id ? {...user,is_active:action.payload.is_active} : user)}
 		}
 	},
 })
@@ -35,6 +39,7 @@ export const {
 	             removeBoardSlice,
 	             updateBoardSlice,
 	             addBoard,
-	             setBoard
+	             setBoard,
+	             setUserBoardActive
              } = boardSlice.actions
 export default boardSlice.reducer

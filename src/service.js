@@ -89,3 +89,11 @@ export const signInWithGoogle      = (params) => {
 export const inviteUserToBoard = (params) => {
 	return axiosInstance.post ("/v1/invite-user-to-board", params)
 }
+
+export const preSignIn = (params) => {
+	return axiosInstance.post ("/pre-sign-in", params)
+}
+
+export const updateBoardUser = (params) => {
+	return axiosInstance.post ("/v1/update-board-has-user", params)
+}

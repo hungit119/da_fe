@@ -9,19 +9,20 @@ import {
 	updatePositionParts
 } from "../service";
 import { useDispatch, useSelector } from "react-redux";
-import { setBoard } from "../features/board/boardSlice";
-import { Avatar, Button, Form, Image, Input, Modal, Select, Spin, Tabs } from "antd";
+import { setBoard, setUserBoardActive } from "../features/board/boardSlice";
+import { Avatar, Button, Form, Input, Modal, Select, Spin, Tabs, Tooltip } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEarth, faPlus, faShare, faStar, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { getUserFromLocalStorage } from "../session";
 import AvatarDefault from "../assets/avatar.jpg"
 import { toast } from "react-toastify";
 import { addParts, setParts } from "../features/part/partSlice";
-import { LoadingOutlined, UserAddOutlined, UserOutlined } from "@ant-design/icons";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { LoadingOutlined, UserOutlined } from "@ant-design/icons";
+import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import Part from "../components/Part";
+import { LIST_ROLE_NAME, optionListRoles, SERVICE } from "../constant";
 import socket from "../webSocket";
-import { ACTION_USER_ACCEPT_JOIN_BOARD, LIST_ROLE_NAME, optionListRoles, TYPE_TREELO_WEB_MEMBER } from "../constant";
+
 
 const BoardDetail = () => {
 	
@@ -29,7 +30,7 @@ const BoardDetail = () => {
 	const dispatch                                = useDispatch ();
 	const board                                   = useSelector ((state) => state.board.board);
 	const parts                                   = useSelector ((state) => state.part.parts);
-	const [loading, setLoading]                   = React.useState (false);
+	const [loading, setLoading]                   = React.useState (true);
 	const [savingPart, setSavingPart]             = React.useState (false);
 	const [fetchingPart, setFetchingPart]         = React.useState (true);
 	const [showFormAddPart, setShowFormAddPart]   = React.useState (false);
@@ -42,20 +43,20 @@ const BoardDetail = () => {
 	};
 	const handleFinishShare = (values) => {
 		const data = {
-			'email_receiver' : values.email,
-			'role_id':values.role_id,
-			'board_id' : board?.id,
-			'board_name': board?.name,
-			'user_invite_name': getUserFromLocalStorage()?.name,
-			'user_invite_email': getUserFromLocalStorage()?.email,
+			'email_receiver'    : values.email,
+			'role_id'           : values.role_id,
+			'board_id'          : board?.id,
+			'board_name'        : board?.name,
+			'user_invite_name'  : getUserFromLocalStorage ()?.name,
+			'user_invite_email' : getUserFromLocalStorage ()?.email,
 		}
 		
-		inviteUserToBoard(data).then(res => {
+		inviteUserToBoard (data).then (res => {
 			console.log (res)
-			if (res.data.code === 200){
+			if (res.data.code === 200) {
 			
 			}
-		}).catch(err => {
+		}).catch (err => {
 			console.log (err)
 		})
 	}
@@ -162,22 +163,30 @@ const BoardDetail = () => {
 	useEffect (() => {
 		fetchBoardDetail ();
 		fetchListPart ()
-	}, [id]);
-	
-	useEffect (() => {
+		socket.send (JSON.stringify ({
+			type    : "joinRoom",
+			service : SERVICE,
+			room    : `board_${ id }`,
+			user_id : getUserFromLocalStorage ()?.id
+		}))
 		socket.onmessage = (event) => {
 			const data = JSON.parse (event.data);
-			console.log (data)
-			if (data && data.type === TYPE_TREELO_WEB_MEMBER) {
-				if (data.data.action === ACTION_USER_ACCEPT_JOIN_BOARD && data.condition.board_id === id) {
-					toast.success (`User : ${ data.condition.user_id } join your board`)
-				}
+			if (data.type === "joinedRoom" && data.room === 'board_' + id) {
+				dispatch (setUserBoardActive ({
+					user_id : data.user_id,
+					is_active:1,
+				}))
 			}
 		}
+		
 		return () => {
-			socket.close ()
+			socket.send (JSON.stringify ({
+				type    : "leaveRoom",
+				service : SERVICE,
+				room    : `board_${ id }`
+			}))
 		}
-	}, [])
+	}, [id]);
 	return (
 		<div>
 			{
@@ -205,9 +214,26 @@ const BoardDetail = () => {
 								        icon={ <FontAwesomeIcon icon={ faEarth } width={ 20 } color={ "white" }/> }/>
 							</div>
 							<div className={ "flex items-center justify-end" }>
-								<Image width={ 42 } height={ 42 }
-								       className={ "rounded-full p-1 border-gray-400 me-2 cursor-pointer object-cover" }
-								       src={ getUserFromLocalStorage ()?.avatar ? getUserFromLocalStorage ()?.avatar : AvatarDefault }/>
+								{/*<Image width={ 42 } height={ 42 }*/ }
+								{/*       className={ "rounded-full p-1 border-gray-400 me-2 cursor-pointer object-cover" }*/ }
+								{/*       src={ getUserFromLocalStorage ()?.avatar ? getUserFromLocalStorage ()?.avatar : AvatarDefault }/>*/ }
+								<Avatar.Group
+									className={ "me-4" }
+									max={ {
+										count : 2,
+										style : {color : '#f56a00', backgroundColor : '#fde3cf'},
+									} }
+								>
+									{
+										board?.users?.map ((user, index) => (
+											<Tooltip title={ user?.name }>
+												<Avatar key={ index }
+												        src={ user?.avatar ? user?.avatar : AvatarDefault }
+												        className={ "cursor-pointer" }/>
+											</Tooltip>
+										))
+									}
+								</Avatar.Group>
 								<Button icon={ <FontAwesomeIcon icon={ faShare }/> } className={ "nunito" }
 								        onClick={ () => setIsModalShareOpen (true) }
 								>Chia
@@ -277,9 +303,9 @@ const BoardDetail = () => {
 				</div>
 			}
 			<Modal
-				footer={[]}
+				footer={ [] }
 				className={ "nunito" } title="Mời thành viên vào bảng của bạn" open={ isModalShareOpen }
-			       onCancel={ handleCancel }>
+				onCancel={ handleCancel }>
 				<Form onFinish={ handleFinishShare }
 				      layout={ "vertical" }
 				      className={ "flex items-center justify-between" }
@@ -347,8 +373,8 @@ const BoardDetail = () => {
 													LIST_ROLE_NAME[user?.pivot?.role_id]
 												}
 											</div>
-										</div>) : <div className={"flex flex-col items-center justify-between py-4" }>
-										<UserOutlined className={"mb-4"} />
+										</div>) : <div className={ "flex flex-col items-center justify-between py-4" }>
+										<UserOutlined className={ "mb-4" }/>
 										<p>Không có yêu cầu tham gia</p>
 									</div>
 							}
