@@ -1,35 +1,46 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
-	boards : [],
-	board  : {},
+	boards           : [],
+	board            : {},
+	requestJoinBoard : []
 }
 
 export const boardSlice = createSlice ({
 	name     : 'board',
 	initialState,
 	reducers : {
-		setBoards        : (state, action) => {
+		setBoards          : (state, action) => {
 			state.boards = action.payload
 		},
-		setBoard         : (state, action) => {
+		setBoard           : (state, action) => {
 			state.board = action.payload
 		},
-		removeBoardSlice : (state, action) => {
+		removeBoardSlice   : (state, action) => {
 			state.boards.splice (state.boards.indexOf (action.payload), 1)
 		},
-		updateBoardSlice : (state, action) => {
+		updateBoardSlice   : (state, action) => {
 			state.boards = state.boards.map (board => board.id === action.payload.id ? action.payload : board)
 		},
-		getListBoard     : (state) => {
+		getListBoard       : (state) => {
 			return state.boards
 		},
-		addBoard         : (state, action) => {
+		addBoard           : (state, action) => {
 			state.boards.unshift (action.payload)
 		},
 		setUserBoardActive : (state, action) => {
-			console.log ("action",action.payload)
-			state.board = {...state.board,users : state.board?.users?.map(user=> user.id === action.payload.user_id ? {...user,is_active:action.payload.is_active} : user)}
+			const board = {...state.board,
+				users : state.board?.users?.map (user => user.id === action.payload.user_id ? {
+					...user, is_active : action.payload.is_active
+				} : user)
+			}
+			state.board = board
+		},
+		addRequestJoinBoard (state, action) {
+			state.requestJoinBoard.push (action.payload)
+		},
+		setRequestJoinBoard (state, action) {
+			state.requestJoinBoard = action.payload
 		}
 	},
 })
@@ -40,6 +51,8 @@ export const {
 	             updateBoardSlice,
 	             addBoard,
 	             setBoard,
-	             setUserBoardActive
+	             setUserBoardActive,
+	             addRequestJoinBoard,
+	             setRequestJoinBoard
              } = boardSlice.actions
 export default boardSlice.reducer

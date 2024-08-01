@@ -3,13 +3,13 @@ import { useParams } from "react-router-dom";
 import {
 	createPart,
 	getBoard,
-	getListPart,
+	getListPart, getListRequestBoard,
 	inviteUserToBoard,
 	updatePositionPartCard,
 	updatePositionParts
 } from "../service";
 import { useDispatch, useSelector } from "react-redux";
-import { setBoard, setUserBoardActive } from "../features/board/boardSlice";
+import { addRequestJoinBoard, setBoard, setRequestJoinBoard, setUserBoardActive } from "../features/board/boardSlice";
 import { Avatar, Button, Form, Input, Modal, Select, Spin, Tabs, Tooltip } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEarth, faPlus, faShare, faStar, faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -20,7 +20,7 @@ import { addParts, setParts } from "../features/part/partSlice";
 import { LoadingOutlined, UserOutlined } from "@ant-design/icons";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import Part from "../components/Part";
-import { LIST_ROLE_NAME, optionListRoles, SERVICE } from "../constant";
+import { LIST_ROLE_NAME, optionListRoles, SERVICE, STATUS_ACTIVE } from "../constant";
 import socket from "../webSocket";
 
 
@@ -29,6 +29,7 @@ const BoardDetail = () => {
 	let {id}                                      = useParams ();
 	const dispatch                                = useDispatch ();
 	const board                                   = useSelector ((state) => state.board.board);
+	const requestJoinBoard                        = useSelector ((state) => state.board.requestJoinBoard);
 	const parts                                   = useSelector ((state) => state.part.parts);
 	const [loading, setLoading]                   = React.useState (true);
 	const [savingPart, setSavingPart]             = React.useState (false);
@@ -50,11 +51,11 @@ const BoardDetail = () => {
 			'user_invite_name'  : getUserFromLocalStorage ()?.name,
 			'user_invite_email' : getUserFromLocalStorage ()?.email,
 		}
-		
 		inviteUserToBoard (data).then (res => {
-			console.log (res)
 			if (res.data.code === 200) {
-			
+				if (res.data.data?.id) {
+					dispatch (addRequestJoinBoard (res.data.data))
+				}
 			}
 		}).catch (err => {
 			console.log (err)
@@ -104,6 +105,18 @@ const BoardDetail = () => {
 			}
 		}).catch (err => {
 			setFetchingPart (false)
+			console.log (err)
+		})
+	}
+	
+	const fetchListRequest = () => {
+		getListRequestBoard ({
+			board_id : id,
+		}).then (res => {
+			if (res.data.code === 200) {
+				dispatch (setRequestJoinBoard (res.data.data))
+			}
+		}).catch (err => {
 			console.log (err)
 		})
 	}
@@ -162,7 +175,8 @@ const BoardDetail = () => {
 	
 	useEffect (() => {
 		fetchBoardDetail ();
-		fetchListPart ()
+		fetchListPart ();
+		fetchListRequest ();
 		socket.send (JSON.stringify ({
 			type    : "joinRoom",
 			service : SERVICE,
@@ -173,8 +187,8 @@ const BoardDetail = () => {
 			const data = JSON.parse (event.data);
 			if (data.type === "joinedRoom" && data.room === 'board_' + id) {
 				dispatch (setUserBoardActive ({
-					user_id : data.user_id,
-					is_active:1,
+					user_id   : data.user_id,
+					is_active : 1,
 				}))
 			}
 		}
@@ -217,23 +231,15 @@ const BoardDetail = () => {
 								{/*<Image width={ 42 } height={ 42 }*/ }
 								{/*       className={ "rounded-full p-1 border-gray-400 me-2 cursor-pointer object-cover" }*/ }
 								{/*       src={ getUserFromLocalStorage ()?.avatar ? getUserFromLocalStorage ()?.avatar : AvatarDefault }/>*/ }
-								<Avatar.Group
-									className={ "me-4" }
-									max={ {
-										count : 2,
-										style : {color : '#f56a00', backgroundColor : '#fde3cf'},
-									} }
-								>
-									{
-										board?.users?.map ((user, index) => (
-											<Tooltip title={ user?.name }>
-												<Avatar key={ index }
-												        src={ user?.avatar ? user?.avatar : AvatarDefault }
-												        className={ "cursor-pointer" }/>
-											</Tooltip>
-										))
-									}
-								</Avatar.Group>
+								{
+									board?.users?.map ((user, index) => (
+										<Tooltip title={ user?.name }>
+											<Avatar key={ index }
+											        src={ user?.avatar ? user?.avatar : AvatarDefault }
+											        className={ `cursor-pointer me-1 ${ user?.is_active === STATUS_ACTIVE || user?.id === getUserFromLocalStorage ()?.id ? "" : "opacity-30" }` }/>
+										</Tooltip>
+									))
+								}
 								<Button icon={ <FontAwesomeIcon icon={ faShare }/> } className={ "nunito" }
 								        onClick={ () => setIsModalShareOpen (true) }
 								>Chia
@@ -310,16 +316,30 @@ const BoardDetail = () => {
 				      layout={ "vertical" }
 				      className={ "flex items-center justify-between" }
 				>
-					<Form.Item name={ "email" } className={ "me-2" }>
+					<Form.Item name={ "email" } className={ "me-2" }
+						rules={[
+							{
+								required:true,
+								message:"Vui lònh nhập địa chỉ email"
+							}
+						]}
+					>
 						<Input rootClassName={ "nunito py-2" } placeholder={ "Nhập địa chỉ email" }
 						       variant={ "filled" }/>
 					</Form.Item>
 					<Form.Item name={ "role_id" }
 					           className={ "me-2" }
-					           initialValue={ optionListRoles[0] }
+					           rules={[
+						           {
+									   required:true,
+							           message: "Vui lòng chọn Quyền"
+						           }
+					           ]}
 					>
 						<Select
+							className={"min-w-[200px]"}
 							options={ optionListRoles }
+							placeholder={"Chọn quyền"}
 						>
 						</Select>
 					</Form.Item>
@@ -354,26 +374,52 @@ const BoardDetail = () => {
 					},
 					{
 						key      : '2',
-						label    : 'Yêu cầu tham gia bảng' + ` (${ board?.users?.filter (user => Number (user?.pivot?.status_accept) === 0)?.length })`,
+						label    : 'Yêu cầu tham gia bảng' + ` (${ board?.users?.filter (user => Number (user?.pivot?.status_accept) === 0)?.length + requestJoinBoard?.length})`,
 						children : <div>
 							{
-								board?.users?.filter (user => Number (user?.pivot?.status_accept) === 0)?.length > 0 ?
-									
-									board?.users?.filter (user => Number (user?.pivot?.status_accept) === 0).map ((user) =>
-										<div className={ "flex items-center justify-between my-2" }>
-											<div className={ "flex items-center" }>
-												<Avatar src={ user?.avatar ?? AvatarDefault } className={ "me-2" }/>
-												<div>
-													<p>{ user?.name }</p>
-													<p>{ user?.email }</p>
-												</div>
-											</div>
-											<div className={ "p-2 bg-gray-800 rounded-lg" }>
-												{
-													LIST_ROLE_NAME[user?.pivot?.role_id]
-												}
-											</div>
-										</div>) : <div className={ "flex flex-col items-center justify-between py-4" }>
+								board?.users?.filter (user => Number (user?.pivot?.status_accept) === 0)?.length > 0
+								|| requestJoinBoard?.length > 0
+									?
+									<>
+										<div>
+											{
+												board?.users?.filter (user => Number (user?.pivot?.status_accept) === 0).map ((user) =>
+													<div className={ "flex items-center justify-between my-2" }>
+														<div className={ "flex items-center" }>
+															<Avatar src={ user?.avatar ?? AvatarDefault } className={ "me-2" }/>
+															<div>
+																<p>{ user?.name }</p>
+																<p>{ user?.email }</p>
+															</div>
+														</div>
+														<div className={ "p-2 bg-gray-800 rounded-lg" }>
+															{
+																LIST_ROLE_NAME[user?.pivot?.role_id]
+															}
+														</div>
+													</div>)
+											}
+											{
+												requestJoinBoard?.map(request => <div>
+													<div className={ "flex items-center justify-between my-2" }>
+														<div className={ "flex items-center" }>
+															<Avatar src={ request?.avatar ?? AvatarDefault }
+															        className={ "me-2" }/>
+															<div>
+																<p>{ request?.email_invited }</p>
+															</div>
+														</div>
+														<div className={ "p-2 bg-gray-800 rounded-lg" }>
+															{
+																LIST_ROLE_NAME[request?.role_id]
+															}
+														</div>
+													</div>
+												</div>)
+											}
+										</div>
+									</>
+									: <div className={ "flex flex-col items-center justify-between py-4" }>
 										<UserOutlined className={ "mb-4" }/>
 										<p>Không có yêu cầu tham gia</p>
 									</div>

@@ -5,6 +5,9 @@ import axiosInstance from "./utils/axiosInstance";
 export const login = (params) => {
 	return axios.post (`${ API_URL }/login`, params)
 }
+export const register = (params) => {
+	return axios.post (`${ API_URL }/register`, params)
+}
 
 // board
 export const createBoard = (params) => {
@@ -96,4 +99,18 @@ export const preSignIn = (params) => {
 
 export const updateBoardUser = (params) => {
 	return axiosInstance.post ("/v1/update-board-has-user", params)
+}
+export const getListRequestBoard            = (params) => {
+	return axiosInstance.get ("/v1/get-list-board-invite-user", {params})
+}
+export const updateInviteGuest = (params) => {
+	return axiosInstance.post(`/v1/update-invite-guest`, params)
+}
+
+// comment
+export const createComment = (params) => {
+	return axiosInstance.post ("/v1/create-comment", params)
+}
+export const getListComment            = (params) => {
+	return axiosInstance.get ("/v1/get-list-comment", {params})
 }

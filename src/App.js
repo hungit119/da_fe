@@ -7,6 +7,7 @@ import LayoutSite from './pages/LayoutSite';
 import PreLogin from "./pages/PreLogin";
 import { useEffect } from "react";
 import socket from "../src/webSocket";
+import PreRegister from "./pages/PreRegister";
 
 function App () {
 	useEffect (() => {
@@ -24,6 +25,7 @@ function App () {
 			<Routes>
 				<Route path="/login" element={ <Login/> }/>
 				<Route path="/pre-login/board/:id" element={ <PreLogin/> }/>
+				<Route path="/pre-register/board/:id" element={ <PreRegister/> }/>
 				<Route path="/*" element={ <Site>
 					<LayoutSite></LayoutSite>
 				</Site> }/>

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Draggable } from "react-beautiful-dnd";
-import { Button, Form, Image, Input, Modal, Spin, Tooltip } from "antd";
+import { Avatar, Button, Form, Image, Input, Modal, Spin, Tooltip } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
 	faArrowRight, faBookmark,
@@ -14,17 +14,24 @@ import {
 	faTag,
 	faUser
 } from "@fortawesome/free-solid-svg-icons";
+import AvatarDefault from "../assets/avatar.jpg"
 import 'react-quill/dist/quill.snow.css';
 import ReactQuill from "react-quill";
 import axios from "axios";
 import { useForm } from "antd/es/form/Form";
-import { createCheckList, createCheckListItem, saveCard } from "../service";
+import { createCheckList, createCheckListItem, createComment, getListComment, saveCard } from "../service";
 import { toast } from "react-toastify";
-import { useDispatch } from "react-redux";
-import { addChecklist, addChecklistItem, saveCardSlice, setParts } from "../features/part/partSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { addChecklist, addChecklistItem, saveCardSlice } from "../features/part/partSlice";
 import CheckList from "./CheckList";
+import TextArea from "antd/es/input/TextArea";
+import { getUserFromLocalStorage } from "../session";
+import { addComment, setComments } from "../features/activity/activitySlice";
+import Comment from "./Comment";
 
 const CardItem = ({card, part, index}) => {
+	
+	const activites = useSelector (( state => state.activity.activities ))
 	
 	const dispatch                      = useDispatch ();
 	const [isModalOpen, setIsModalOpen] = useState (false);
@@ -45,6 +52,10 @@ const CardItem = ({card, part, index}) => {
 		name        : "",
 		checklistID : -1
 	});
+	
+	const [creating, setCreating] = useState (false)
+	
+	const [textComment, setTextComment] = useState ("")
 	
 	const showModal    = () => {
 		setIsModalOpen (true);
@@ -69,9 +80,8 @@ const CardItem = ({card, part, index}) => {
 		input.click ();
 		input.onchange = async () => {
 			if (input !== null && input.files !== null) {
-				const file = input.files[0];
-				const url  = await uploadToCloudinary (file);
-				console.log (url)
+				const file  = input.files[0];
+				const url   = await uploadToCloudinary (file);
 				const quill = reactQuillRef.current;
 				if (quill) {
 					const range = quill.getEditorSelection ();
@@ -156,7 +166,7 @@ const CardItem = ({card, part, index}) => {
 				dispatch (addChecklist ({
 					card_id    : card?.id,
 					part_id    : part?.id,
-					checklists : {...res.data.data,check_list_items:[]}
+					checklists : {...res.data.data, check_list_items : [], activities : []}
 				}))
 				formCheckLists.resetFields ()
 				setShowCreateCheckList (false)
@@ -196,11 +206,46 @@ const CardItem = ({card, part, index}) => {
 			}
 			
 		}).catch (err => {
-			debugger
 			setSaving (false)
 			toast.error (err.response.data.data.message)
 		})
 	}
+	
+	const handleClickComment = () => {
+		setCreating (true)
+		const comment = {
+			content : textComment,
+			user_id : getUserFromLocalStorage ()?.id,
+			card_id : card?.id
+		}
+		
+		createComment (comment).then (res => {
+			setCreating (false)
+			if (res.data.code === 200) {
+				dispatch (addComment ({
+					...res.data.data, name : getUserFromLocalStorage ()?.name,
+					avatar                 : getUserFromLocalStorage ()?.avatar
+				}))
+			}
+		}).catch (err => {
+			setCreating (false)
+			toast.error (JSON.stringify (err.response))
+		})
+	}
+	
+	useEffect (() => {
+		if (isModalOpen) {
+			getListComment ({
+				card_id : card?.id
+			}).then (res => {
+				if (res.data.code === 200) {
+					dispatch (setComments (res.data.data))
+				}
+			}).catch (err => {
+				toast.error (JSON.stringify (err))
+			})
+		}
+	}, [card?.id, isModalOpen])
 	
 	
 	return (
@@ -225,7 +270,8 @@ const CardItem = ({card, part, index}) => {
 							card.attachments?.find (att => att.type === 1)?.url &&
 							<div>
 								<Image src={ card.attachments?.find (att => att.type === 1)?.url }
-								       className={ "rounded-xl object-cover" } preview={ false } width={256} height={150} />
+								       className={ "rounded-xl object-cover" } preview={ false } width={ 256 }
+								       height={ 150 }/>
 							</div>
 						}
 						<div className={ "flex flex-col p-2" }>
@@ -401,8 +447,8 @@ const CardItem = ({card, part, index}) => {
 														setNameCheckListItem={ handleChangeChecklistItem }
 														handleClickSaveCheckListItem={ handleCreateCheckListItem }
 														saving={ saving }
-														part_id={part?.id}
-														card_id={card?.id}
+														part_id={ part?.id }
+														card_id={ card?.id }
 													/>
 												))
 											}
@@ -477,6 +523,34 @@ const CardItem = ({card, part, index}) => {
 								>Lưu thẻ</Button>
 							</div>
 						</Form>
+						<div className={ "flex items-start w-100 pe-6 gap-4 nunito" }>
+							<FontAwesomeIcon icon={ faList } size={ "xl" } className={ "mt-1" }/>
+							<div className={ "flex-1" }>
+								<p className={ "text-xl font-bold" }>Bình luận</p>
+							</div>
+						</div>
+						<div className={ "w-100 mt-4 flex items-start" }>
+							<div className={ "me-2" }>
+								<Avatar src={ getUserFromLocalStorage ()?.avatar ?? AvatarDefault } size={ "large" }/>
+							</div>
+							<TextArea placeholder={ "Viết bình luận" } rootClassName={ "nunito py-2 bg-[#22272B] me-2" }
+							          onChange={ (e) => {
+								          setTextComment (e.target.value)
+							          } }
+							/>
+							<Button type={ "primary" } className={ "bg-blue-500" } size={ "large" }
+							        disabled={ !textComment || creating }
+							        onClick={ handleClickComment }
+							>
+								{ creating ? <Spin/> : "Gửi" }
+							</Button>
+						</div>
+						<div className={ "w-100 mt-4 flex items-start flex-col" }>
+							{
+								activites?.length > 0 && activites?.map ((activity, index) => <Comment key={ index }
+								                                                                       comment={ activity }/>)
+							}
+						</div>
 					</div>
 					<div className={ "nunito py-10" }>
 						<p className={ "text-sm mb-2" }>Thêm vào thẻ</p>

@@ -21,7 +21,7 @@ export const partSlice = createSlice ({
 		saveCardSlice            : (state, action) => {
 			state.parts = state.parts.map (part => part.id !== action.payload.part_id ? part : {
 				...part,
-				cards : part.cards.map (card => card.id === action.payload.card.card_id ? {
+				cards : part?.cards.map (card => card.id === action.payload.card.card_id ? {
 					...card, attachments : [...card.attachments, ...action.payload.card.images],
 					description          : action.payload.card.description,
 					name                 : action.payload.card.name,
@@ -35,8 +35,8 @@ export const partSlice = createSlice ({
 		addChecklist             : (state, action) => {
 			state.parts = state.parts.map (part => part.id === action.payload.part_id ?
 				{
-					...part, cards : part.cards.map (card => card.id === action.payload.card_id ? {
-						...card, checklists : [...card.checklists, action.payload.checklists]
+					...part, cards : part?.cards.map (card => card.id === action.payload.card_id ? {
+						...card, checklists : [...card?.checklists, action.payload.checklists]
 					} : card)
 				}
 				: part)
@@ -44,11 +44,11 @@ export const partSlice = createSlice ({
 		addChecklistItem         : (state, action) => {
 			state.parts = state.parts.map (part => part.id === action.payload.part_id ?
 				{
-					...part, cards : part.cards.map (card => card.id === action.payload.card_id ? {
+					...part, cards : part?.cards.map (card => card.id === action.payload.card_id ? {
 						...card,
-						checklists : card.checklists.map (checkList => checkList.id === action.payload.check_list_id ? {
+						checklists : card?.checklists.map (checkList => checkList.id === action.payload.check_list_id ? {
 							...checkList,
-							check_list_items : [...checkList.check_list_items, action.payload.checkListItem]
+							check_list_items : [...checkList?.check_list_items, action.payload.checkListItem]
 						} : checkList)
 					} : card)
 				}
@@ -57,9 +57,9 @@ export const partSlice = createSlice ({
 		updateCheckListItemSlice : (state, action) => {
 			state.parts = state.parts.map (part => part.id === action.payload.part_id ?
 				{
-					...part, cards : part.cards.map (card => card.id === action.payload.card_id ? {
+					...part, cards : part?.cards.map (card => card.id === action.payload.card_id ? {
 						...card,
-							checklists : card.checklists.map (checkList => checkList.id === action.payload.check_list_id ? {
+						checklists : card?.checklists.map (checkList => checkList.id === action.payload.check_list_id ? {
 							...checkList,
 							check_list_items : checkList?.check_list_items?.map (item => item.id === action.payload.check_list_item_id ? {
 								...item, is_checked : action.payload.is_checked
@@ -68,8 +68,7 @@ export const partSlice = createSlice ({
 					} : card)
 				}
 				: part)
-		}
-		
+		},
 	}
 })
 
@@ -81,6 +80,6 @@ export const {
 	             reorder,
 	             addChecklist,
 	             addChecklistItem,
-	             updateCheckListItemSlice
+	             updateCheckListItemSlice,
              } = partSlice.actions
 export default partSlice.reducer

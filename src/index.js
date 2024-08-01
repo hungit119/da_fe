@@ -48,6 +48,11 @@ root.render (
 							titleColor    : "#B6C2CF",
 							headerBg       :"#323940"
 						},
+						Select: {
+							colorTextPrimary : "#5C5C5C",
+							colorText:"#22272B",
+						},
+						
 					},
 				} }
 			>

@@ -45,3 +45,4 @@ export const SERVICE           = "TREELO_WEB";
 export const ACTION_USER_ACCEPT_JOIN_BOARD = "ACTION_USER_ACCEPT_JOIN_BOARD"
 
 export const STATUS_ACCEPTED = 1;
+export const STATUS_ACTIVE = 1;

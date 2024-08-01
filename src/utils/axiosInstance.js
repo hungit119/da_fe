@@ -5,7 +5,7 @@ import {
 import {API_URL} from "../env";
 const axiosInstance = axios.create({
     baseURL: API_URL,
-    timeout: 5000,
+    timeout: 100000,
 });
 axiosInstance.interceptors.request.use(
     async (config) => {

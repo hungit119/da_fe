@@ -7,7 +7,6 @@ socket.onopen = () => {
 }
 
 socket.onmessage = (event) => {
-	console.log('WebSocket message received:', event.data);
 };
 socket.onclose = () => {
 	console.log('WebSocket connection closed');
