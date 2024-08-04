@@ -28,9 +28,13 @@ import TextArea from "antd/es/input/TextArea";
 import { getUserFromLocalStorage } from "../session";
 import { addComment, setComments } from "../features/activity/activitySlice";
 import Comment from "./Comment";
+import socket from "../webSocket";
+import { SERVICE, SERVICE_COMMENT, SERVICE_COMMENT_RELOAD } from "../constant";
+import { useParams } from "react-router-dom";
+import { setUserBoardActive } from "../features/board/boardSlice";
 
 const CardItem = ({card, part, index}) => {
-	
+	const {id}      = useParams ();
 	const activites = useSelector (( state => state.activity.activities ))
 	
 	const dispatch                      = useDispatch ();
@@ -57,6 +61,8 @@ const CardItem = ({card, part, index}) => {
 	
 	const [textComment, setTextComment] = useState ("")
 	
+	const [reloadListComments, setReloadListComments] = useState (false)
+	
 	const showModal    = () => {
 		setIsModalOpen (true);
 	};
@@ -64,6 +70,11 @@ const CardItem = ({card, part, index}) => {
 		setIsModalOpen (false);
 	};
 	const handleCancel = () => {
+		socket.send (JSON.stringify ({
+			type    : "leaveRoom",
+			service : SERVICE,
+			room    : `card_${ card?.id }`
+		}))
 		setIsModalOpen (false);
 	};
 	
@@ -222,10 +233,33 @@ const CardItem = ({card, part, index}) => {
 		createComment (comment).then (res => {
 			setCreating (false)
 			if (res.data.code === 200) {
-				dispatch (addComment ({
-					...res.data.data, name : getUserFromLocalStorage ()?.name,
-					avatar                 : getUserFromLocalStorage ()?.avatar
+				socket.send (JSON.stringify ({
+					type    : "broadcastMessage",
+					service : SERVICE_COMMENT,
+					room    : `card_${ card?.id }`,
+					user_id : getUserFromLocalStorage ()?.id,
+					comment : {
+						...res.data.data,
+						activities : [],
+						user       : {
+							id     : getUserFromLocalStorage ()?.id,
+							avatar : getUserFromLocalStorage ()?.avatar,
+							name   : getUserFromLocalStorage ()?.name,
+							email  : getUserFromLocalStorage ()?.email,
+						}
+					}
 				}))
+				dispatch (addComment ({
+					...res.data.data,
+					activities : [],
+					user       : {
+						id     : getUserFromLocalStorage ()?.id,
+						avatar : getUserFromLocalStorage ()?.avatar,
+						name   : getUserFromLocalStorage ()?.name,
+						email  : getUserFromLocalStorage ()?.email,
+					}
+				}))
+				setTextComment ("")
 			}
 		}).catch (err => {
 			setCreating (false)
@@ -244,10 +278,54 @@ const CardItem = ({card, part, index}) => {
 			}).catch (err => {
 				toast.error (JSON.stringify (err))
 			})
+			
+			socket.send (JSON.stringify ({
+				type    : "joinRoom",
+				service : SERVICE,
+				room    : `card_${ card?.id }`,
+				user_id : getUserFromLocalStorage ()?.id
+			}))
+			
+			socket.onmessage = (event) => {
+				const data = JSON.parse (event.data)
+				if (data.type === "broadcastMessage" && data.room === 'card_' + card?.id && data.service === SERVICE_COMMENT && data.user_id !== getUserFromLocalStorage ()?.id) {
+					dispatch (addComment ({
+						...data.comment
+					}))
+				}
+			}
+			socket.onmessage = (event) => {
+				const data = JSON.parse(event.data)
+				if (data.type === "broadcastMessage" && data.room === 'card_' + card?.id && data.service === SERVICE_COMMENT_RELOAD) {
+					setReloadListComments(true)
+				}
+			}
+		}
+		
+		return () => {
+			socket.send (JSON.stringify ({
+				type    : "leaveRoom",
+				service : SERVICE,
+				room    : `card_${ card?.id }`
+			}))
 		}
 	}, [card?.id, isModalOpen])
 	
-	
+	useEffect (() => {
+		if (reloadListComments === true && isModalOpen) {
+			getListComment ({
+				card_id : card?.id
+			}).then (res => {
+				setReloadListComments (false)
+				if (res.data.code === 200) {
+					dispatch (setComments (res.data.data))
+				}
+			}).catch (err => {
+				setReloadListComments (false)
+				toast.error (JSON.stringify (err))
+			})
+		}
+	}, [reloadListComments]);
 	return (
 		<>
 			<Draggable
@@ -537,6 +615,7 @@ const CardItem = ({card, part, index}) => {
 							          onChange={ (e) => {
 								          setTextComment (e.target.value)
 							          } }
+							          value={ textComment }
 							/>
 							<Button type={ "primary" } className={ "bg-blue-500" } size={ "large" }
 							        disabled={ !textComment || creating }
@@ -547,8 +626,12 @@ const CardItem = ({card, part, index}) => {
 						</div>
 						<div className={ "w-100 mt-4 flex items-start flex-col" }>
 							{
-								activites?.length > 0 && activites?.map ((activity, index) => <Comment key={ index }
-								                                                                       comment={ activity }/>)
+								activites?.length > 0 && activites?.map ((activity, index) =>
+									<Comment key={ index }
+									         comment={ activity }
+									         card_id={ card?.id }
+									         setReloadListComments={ setReloadListComments }
+									/>)
 							}
 						</div>
 					</div>

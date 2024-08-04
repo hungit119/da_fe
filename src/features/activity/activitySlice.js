@@ -8,17 +8,17 @@ export const activitySlice = createSlice ({
 	name     : 'activity',
 	initialState,
 	reducers : {
-		addComment  : (state, action) => {
+		addComment      : (state, action) => {
 			state.activities.unshift (action.payload)
 		},
-		setComments : (state, action) => {
+		setComments     : (state, action) => {
 			state.activities = ( action.payload )
-		}
+		},
 	},
 })
 
 export const {
 	             addComment,
-	             setComments
+	             setComments,
              } = activitySlice.actions
 export default activitySlice.reducer
