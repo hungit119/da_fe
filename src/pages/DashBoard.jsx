@@ -9,6 +9,7 @@ import { getUserFromLocalStorage } from "../session";
 import Meta from "antd/es/card/Meta";
 import { useDispatch, useSelector } from "react-redux";
 import { addBoard, setBoards, updateBoardSlice, removeBoardSlice } from "../features/board/boardSlice";
+import { useNavigate } from "react-router-dom";
 
 const beforeUpload = (file) => {
 	const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
@@ -22,7 +23,7 @@ const beforeUpload = (file) => {
 	return isJpgOrPng && isLt2M;
 };
 const DashBoard    = () => {
-	
+	const navigate = useNavigate();
 	const dispatch  = useDispatch ();
 	const listBoard = useSelector (state => state.board.boards);
 	
@@ -176,7 +177,11 @@ const DashBoard    = () => {
 						/>
 					</div> : (
 						listBoard?.length > 0 ? listBoard.map ((board, index) => {
-							return <Col className={"relative hover:cursor-pointer"}>
+							return <Col className={"relative hover:cursor-pointer"}
+								onClick={() => {
+									navigate('/board/' + board?.id)
+								}}
+							>
 								<Image width={ 300 }
 								       height={120}
 								       src={ board?.avatar ?? "https://flowbite.com/docs/images/examples/image-1@2x.jpg" }

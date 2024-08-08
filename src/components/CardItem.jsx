@@ -1,16 +1,19 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Draggable } from "react-beautiful-dnd";
-import { Avatar, Button, Form, Image, Input, Modal, Spin, Tooltip } from "antd";
+import { Avatar, Button, DatePicker, Form, Image, Input, Modal, Select, Spin, Tooltip } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-	faArrowRight, faBookmark,
-	faCheck, faClock,
-	faCreditCard, faCut,
+	faArrowRight,
+	faBookmark,
+	faCheck,
+	faClock,
+	faCreditCard,
 	faEye,
 	faList,
 	faListUl,
 	faPaperclip,
-	faPencil, faSave, faShare,
+	faPencil,
+	faShare,
 	faTag,
 	faUser
 } from "@fortawesome/free-solid-svg-icons";
@@ -22,20 +25,29 @@ import { useForm } from "antd/es/form/Form";
 import { createCheckList, createCheckListItem, createComment, getListComment, saveCard } from "../service";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
-import { addChecklist, addChecklistItem, saveCardSlice } from "../features/part/partSlice";
+import { addChecklist, addChecklistItem, saveCardSlice, updateCheckListItemSlice } from "../features/part/partSlice";
 import CheckList from "./CheckList";
 import TextArea from "antd/es/input/TextArea";
 import { getUserFromLocalStorage } from "../session";
 import { addComment, setComments } from "../features/activity/activitySlice";
 import Comment from "./Comment";
 import socket from "../webSocket";
-import { SERVICE, SERVICE_COMMENT, SERVICE_COMMENT_RELOAD } from "../constant";
+import {
+	SERVICE,
+	SERVICE_CHECK_LIST_RELOAD,
+	SERVICE_COMMENT,
+	SERVICE_COMMENT_RELOAD,
+	TYPE_BOARD_OPTIONS
+} from "../constant";
 import { useParams } from "react-router-dom";
-import { setUserBoardActive } from "../features/board/boardSlice";
+import DateChoose from "./DateChoose";
+
+const {RangePicker} = DatePicker;
 
 const CardItem = ({card, part, index}) => {
 	const {id}      = useParams ();
 	const activites = useSelector (( state => state.activity.activities ))
+	const board = useSelector((state => state.board.board))
 	
 	const dispatch                      = useDispatch ();
 	const [isModalOpen, setIsModalOpen] = useState (false);
@@ -56,12 +68,23 @@ const CardItem = ({card, part, index}) => {
 		name        : "",
 		checklistID : -1
 	});
+	const [jobScore, setJobScore] = useState (1);
+	const [dateTimeStartCheckListItem, setDateTimeStartCheckListItem] = useState (null);
+	const [dateTimeEndCheckListItem, setDateTimeEndCheckListItem] = useState (null);
 	
 	const [creating, setCreating] = useState (false)
 	
 	const [textComment, setTextComment] = useState ("")
 	
 	const [reloadListComments, setReloadListComments] = useState (false)
+	
+	const [open, setOpen] = useState (false);
+	const showDrawer      = () => {
+		setOpen (true);
+	};
+	const onClose         = () => {
+		setOpen (false);
+	};
 	
 	const showModal    = () => {
 		setIsModalOpen (true);
@@ -168,7 +191,8 @@ const CardItem = ({card, part, index}) => {
 		setSaving (true)
 		const data = {
 			name    : values.name,
-			card_id : card?.id
+			card_id : card?.id,
+			user_id : values.user_id
 		}
 		
 		createCheckList (data).then (res => {
@@ -199,7 +223,10 @@ const CardItem = ({card, part, index}) => {
 		setSaving (true)
 		const data = {
 			name          : valueInputCheckListItem.name,
-			check_list_id : valueInputCheckListItem.checklistID
+			check_list_id : valueInputCheckListItem.checklistID,
+			job_score: jobScore,
+			time_start: dateTimeStartCheckListItem,
+			estimate_time_end: dateTimeEndCheckListItem,
 		}
 		createCheckListItem (data).then (res => {
 			setSaving (false)
@@ -295,9 +322,20 @@ const CardItem = ({card, part, index}) => {
 				}
 			}
 			socket.onmessage = (event) => {
-				const data = JSON.parse(event.data)
+				const data = JSON.parse (event.data)
 				if (data.type === "broadcastMessage" && data.room === 'card_' + card?.id && data.service === SERVICE_COMMENT_RELOAD) {
-					setReloadListComments(true)
+					setReloadListComments (true)
+				}
+				if (data.type === "broadcastMessage" && data.room === 'card_' + card?.id && data.service === SERVICE_CHECK_LIST_RELOAD) {
+					if (getUserFromLocalStorage ()?.id !== data.user_id) {
+						dispatch (updateCheckListItemSlice ({
+							part_id            : data.checklist.part_id,
+							card_id            : data.checklist.card_id,
+							check_list_id      : data.checklist.check_list_id,
+							check_list_item_id : data.checklist.check_list_item_id,
+							is_checked         : data.checklist.is_checked,
+						}))
+					}
 				}
 			}
 		}
@@ -524,9 +562,13 @@ const CardItem = ({card, part, index}) => {
 														showForm={ showForm }
 														setNameCheckListItem={ handleChangeChecklistItem }
 														handleClickSaveCheckListItem={ handleCreateCheckListItem }
+														setJobScore={setJobScore}
+														setDateTimeEndCheckListItem={setDateTimeEndCheckListItem}
+														setDateTimeStartCheckListItem={setDateTimeStartCheckListItem}
 														saving={ saving }
 														part_id={ part?.id }
 														card_id={ card?.id }
+														user={board?.users?.find(user => user?.id===checklist?.user_id)}
 													/>
 												))
 											}
@@ -655,7 +697,9 @@ const CardItem = ({card, part, index}) => {
 							<p>Việc cần làm</p>
 						</Button>
 						<Button block type={ "primary" } className={ "flex justify-start my-2 bg-[#3B444C]" }
-						        icon={ <FontAwesomeIcon icon={ faClock } size={ "sm" }/> }>
+						        icon={ <FontAwesomeIcon icon={ faClock } size={ "sm" }/> }
+						        onClick={ showDrawer }
+						>
 							<p>Ngày</p>
 						</Button>
 						<Button block type={ "primary" } className={ "flex justify-start my-2 bg-[#3B444C]" }
@@ -694,12 +738,25 @@ const CardItem = ({card, part, index}) => {
 						] }>
 							<Input variant={ "filled" }/>
 						</Form.Item>
+						<Form.Item name={"user_id"} label={"Thành viên đảm nhiệm"} rules={[
+							{
+								required: true,
+								message : "Vui lòng chọn thành viên đảm nhiệm"
+							}
+						]}>
+							<Select options={ board?.users?.map (user => ( {
+								value : user?.id,
+								label : user?.name
+							} )) } >
+							</Select>
+						</Form.Item>
 						<Button type='primary' disabled={ saving } htmlType='submit'>{
 							saving ? <Spin/> : "Thêm"
 						}</Button>
 					</Form>
 				</div>
 			</Modal>
+			<DateChoose open={ open } onClose={ onClose }/>
 		</>
 	);
 };

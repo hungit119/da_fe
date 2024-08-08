@@ -48,6 +48,17 @@ root.render (
 							titleColor    : "#B6C2CF",
 							headerBg       :"#323940"
 						},
+						Drawer  : {
+							contentBg     : "#323940",
+							colorText     : "#1D2125",
+							colorTextBase : "#1D2125",
+							colorIcon     : "#1D2125",
+							titleColor    : "#B6C2CF",
+							headerBg       :"#323940",
+						},
+						DatePicker: {
+							colorText : "#1D2125"
+						},
 						Select: {
 							colorTextPrimary : "#5C5C5C",
 							colorText:"#22272B",

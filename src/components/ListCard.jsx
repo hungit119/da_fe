@@ -17,7 +17,7 @@ const ListCard = ({part,index}) => {
 				>
 					{
 						part.cards?.map ((card, index) =>
-							<CardItem card={card} part={part} index={index}/>
+							<CardItem card={card} part={part} index={index} />
 						)
 					}
 					{ providedCard.placeholder }

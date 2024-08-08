@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Button, Form, Input, Spin } from "antd";
+import { Button, Form, Input, InputNumber, Spin } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { toast } from "react-toastify";
 import { register, updateInviteGuest } from "../service";
@@ -22,6 +22,7 @@ const PreRegister = () => {
 		register ({
 			name     : values.name,
 			email    : values.email,
+			year_experience: values.year_experience,
 			password : values.password
 		}).then (res => {
 			setSaving (false)
@@ -60,6 +61,9 @@ const PreRegister = () => {
 					</Form.Item>
 					<Form.Item name={ "name" }>
 						<Input variant={ "filled" } className={ "p-3" } placeholder={ "Nhập tên" }/>
+					</Form.Item>
+					<Form.Item name={"year_experience"}>
+						<InputNumber variant={ "filled" } min={1} placeholder={"Tháng kinh nghiệm"}/>
 					</Form.Item>
 					<Form.Item name={ "password" }>
 						<Input.Password variant={ "filled" } placeholder={ "Nhập mật khẩu" } rootClassName={ "p-3" }/>
