@@ -63,7 +63,18 @@ root.render (
 							colorTextPrimary : "#5C5C5C",
 							colorText:"#22272B",
 						},
-						
+						Card: {
+							contentBg     : "#323940",
+							colorText     : "#B6C2CF",
+							colorTextBase : "#B6C2CF",
+							colorIcon     : "#FFFFFF",
+							titleColor    : "#B6C2CF",
+							headerBg       :"#323940"
+						},
+						Table: {
+							colorText :"#323940",
+							headerColor :"#323940"
+						}
 					},
 				} }
 			>

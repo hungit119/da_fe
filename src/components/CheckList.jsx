@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckSquare } from "@fortawesome/free-solid-svg-icons";
 import { Avatar, Button, Checkbox, DatePicker, Input, InputNumber, Progress, Spin, Tooltip } from "antd";
-import { updateCheckListItem } from "../service";
+import { predict, updateCheckListItem } from "../service";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { updateCheckListItemSlice } from "../features/part/partSlice";
@@ -10,7 +10,8 @@ import socket from "../webSocket";
 import { ROLE_ADMIN, SERVICE_CHECK_LIST_RELOAD, SERVICE_COMMENT_RELOAD } from "../constant";
 import { getUserFromLocalStorage } from "../session";
 import AvatarDefault from "../assets/avatar.jpg"
-import { dateToHMDDMonthYYYY } from "../utils/time";
+import { dateToHMDDMonthYYYY, dateToMMDD } from "../utils/time";
+import moment from "moment-timezone";
 
 
 const CheckList = ({
@@ -60,6 +61,20 @@ const CheckList = ({
 			toast.error (JSON.stringify (err.response));
 		})
 	}
+	const handleClickPredict = (userID, timeStart,jobScore) => {
+		const data = {
+			userID,
+			time_start :timeStart,
+			jobScore
+		}
+		predict(data).then(res => {
+			if (res.data.code === 200) {
+				console.log (res.data)
+			}
+		}).catch(err => {
+			toast.error(err)
+		})
+	}
 	return (
 		<div className={ "my-6" }>
 			<div className={ "flex justify-between items-center" }>
@@ -94,8 +109,8 @@ const CheckList = ({
 										<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }>{ checklistItem?.name }</p>
 										<div>
 											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }> Job score : <span className={"font-bold text-blue-600"}>{ checklistItem?.job_score }</span></p>
-											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }> Start date : <span className={"font-bold text-blue-600"}>{ dateToHMDDMonthYYYY(checklistItem?.time_start) }</span></p>
-											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }> Estimated end date : <span className={"font-bold text-red-600"}>{ dateToHMDDMonthYYYY(checklistItem?.estimate_time_end) }</span></p>
+											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }> Start date : <span className={"font-bold text-blue-600"}>{ dateToMMDD(checklistItem?.time_start) }</span></p>
+											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }> Estimated end date : <span className={"font-bold text-red-600"}>{ dateToMMDD(checklistItem?.estimate_time_end) }</span></p>
 										</div>
 									</div>
 								</div>
@@ -115,16 +130,17 @@ const CheckList = ({
 								<div className={"flex items-center gap-4"}>
 									<p>Chọn thời gian bắt đầu</p>
 									<DatePicker  rootClassName={"my-4"}  onChange={(date, dateString) => {
-										setDateTimeStartCheckListItem(Math.floor(date.valueOf() / 1000))
+										setDateTimeStartCheckListItem(date.valueOf());
 									}} />
 									<InputNumber className={"w-[150px]"} min={1} placeholder={"Chọn job score"} onChange={(value) => {
 										setJobScore(value)
 									}}/>
 								</div>
+								<Button type={"primary"} onClick={handleClickPredict}>Dự đoán</Button>
 								<div className={"flex items-center gap-4"}>
 									<p>Thời gian kết thúc</p>
 									<DatePicker rootClassName={ "my-4" }  onChange={ (date, dateString) => {
-										setDateTimeEndCheckListItem (Math.floor(date.valueOf() / 1000))
+										setDateTimeEndCheckListItem (date.valueOf())
 									} }/>
 								</div>
 							</div>

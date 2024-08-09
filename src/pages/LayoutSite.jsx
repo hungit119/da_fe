@@ -10,7 +10,7 @@ import {
 	faCreditCard, faPlus,
 	faRing,
 	faTree,
-	faTruckFast, faUser,
+	faTruckFast, faUser, faUserFriends,
 	faUsers
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -31,6 +31,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Board from "../assets/create-board.svg";
 import { TYPE_BOARD_OPTIONS } from "../constant";
 import BoardDetail from "./BoardDetail";
+import User from "./User";
 
 const {Header, Sider, Content} = Layout;
 const beforeUpload             = (file) => {
@@ -203,6 +204,13 @@ const LayoutSite               = () => {
 									className={ "me-4" }/>
 								<p className={ "font-bold" }>Profile</p>
 							</NavLink>
+							<NavLink to={ "/users" }
+							         className={ "grid grid-cols-3 items-baseline px-4 py-2 hover:bg-[#3C3F42]" }>
+								<FontAwesomeIcon
+									icon={ faUserFriends } size={ "sm" }
+									className={ "me-4" }/> <p
+								className={ "font-bold" }>Users</p>
+							</NavLink>
 							<div className={ "flex justify-between items-center px-4 py-2" }>
 								<p className={ "text-[#8C9BAB] font-bold" }>Các bản của bạn</p>
 								<Button type={ "primary" } icon={ <FontAwesomeIcon icon={ faPlus }/> } size={ "small" }
@@ -237,6 +245,7 @@ const LayoutSite               = () => {
 							<Route path="/profile" element={ <Profile/> }/>
 							<Route path="/setting" element={ <Setting/> }/>
 							<Route path="/board/:id" element={ <BoardDetail/> }/>
+							<Route path="/users" element={ <User/> }/>
 						</Routes>
 					</Content>
 				</Layout>

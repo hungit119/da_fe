@@ -114,3 +114,17 @@ export const createComment = (params) => {
 export const getListComment            = (params) => {
 	return axiosInstance.get ("/v1/get-list-comment", {params})
 }
+// user
+export const getUsers            = (params) => {
+	return axiosInstance.get ("/v1/get-users", {params})
+}
+export const createUser = (params) => {
+	return axiosInstance.post("/v1/create-user",params)
+}
+
+export const deleteUser = (params) => {
+	return axiosInstance.post("/v1/delete-user",params)
+}
+export const predict = (params) => {
+	return axiosInstance.post("/predict-time-end",params)
+}
