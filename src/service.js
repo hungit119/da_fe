@@ -121,6 +121,9 @@ export const getUsers            = (params) => {
 export const createUser = (params) => {
 	return axiosInstance.post("/v1/create-user",params)
 }
+export const updateUser = (params) => {
+	return axiosInstance.post("/v1/update-user",params)
+}
 
 export const deleteUser = (params) => {
 	return axiosInstance.post("/v1/delete-user",params)

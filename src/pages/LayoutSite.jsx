@@ -29,7 +29,7 @@ import { toast } from "react-toastify";
 import { addBoard, setBoards, updateBoardSlice } from "../features/board/boardSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Board from "../assets/create-board.svg";
-import { TYPE_BOARD_OPTIONS } from "../constant";
+import { ROLE_ADMIN, TYPE_BOARD_OPTIONS } from "../constant";
 import BoardDetail from "./BoardDetail";
 import User from "./User";
 
@@ -204,13 +204,15 @@ const LayoutSite               = () => {
 									className={ "me-4" }/>
 								<p className={ "font-bold" }>Profile</p>
 							</NavLink>
-							<NavLink to={ "/users" }
-							         className={ "grid grid-cols-3 items-baseline px-4 py-2 hover:bg-[#3C3F42]" }>
-								<FontAwesomeIcon
-									icon={ faUserFriends } size={ "sm" }
-									className={ "me-4" }/> <p
-								className={ "font-bold" }>Users</p>
-							</NavLink>
+							{
+								getUserFromLocalStorage()?.role_id === ROLE_ADMIN && <NavLink to={ "/users" }
+								                                                              className={ "grid grid-cols-3 items-baseline px-4 py-2 hover:bg-[#3C3F42]" }>
+									<FontAwesomeIcon
+										icon={ faUserFriends } size={ "sm" }
+										className={ "me-4" }/> <p
+									className={ "font-bold" }>Users</p>
+								</NavLink>
+							}
 							<div className={ "flex justify-between items-center px-4 py-2" }>
 								<p className={ "text-[#8C9BAB] font-bold" }>Các bản của bạn</p>
 								<Button type={ "primary" } icon={ <FontAwesomeIcon icon={ faPlus }/> } size={ "small" }

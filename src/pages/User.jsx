@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Avatar, Button, Card, Form, Input, Modal, Select, Spin, Table } from "antd";
+import { Avatar, Button, Card, Form, Input, Modal, Pagination, Select, Spin, Table } from "antd";
 import { Space, Tag } from 'antd';
-import { createUser, deleteUser, getUsers } from "../service";
+import { createUser, deleteUser, getUsers, updateUser } from "../service";
 import { LIST_ROLE_NAME, optionListRoles } from "../constant";
 import { toast } from "react-toastify";
 import { ExclamationCircleFilled } from "@ant-design/icons";
 const User = () => {
 	const { confirm } = Modal;
 	const [form] = Form.useForm()
+	const [userID, setUserID] = useState (null)
 	const showConfirm = (id) => {
 		confirm({
 			title: 'Do you want to delete these items?',
@@ -27,7 +28,7 @@ const User = () => {
 			},
 			onCancel() {
 				console.log('Cancel');
-			},
+		},
 		});
 	};
 	const columns = [
@@ -87,7 +88,8 @@ const User = () => {
 						setIsModalOpen(true)
 						form.setFieldValue('name', record.name)
 						form.setFieldValue('email', record.email)
-						
+						form.setFieldValue('password', record.password)
+						setUserID(record?.id)
 					}}>Edit {record.name}</Button>
 					<Button danger onClick={() => showConfirm(record?.id)}>Delete</Button>
 				</Space>
@@ -135,10 +137,9 @@ const User = () => {
 	useEffect (() => {
 			setIsLoading(true)
 			fetchUsers()
-	}, [keyword]);
+	}, [keyword,page]);
 	
 	const handleCreatUser = (values) => {
-		debugger
 		setIsSaving(true)
 		const data = {
 			name:values.name,
@@ -146,18 +147,35 @@ const User = () => {
 			password: values.password,
 			role_id : values.role_id
 		}
-		createUser(data).then (res => {
-			setIsSaving(false)
-			if (res.data.code === 200) {
-				toast.success(res.data.message)
-				fetchUsers()
-			}
-		}).catch(err => {
-			setIsSaving(false)
-			console.log(err)
-		})
+		if (userID !== null){
+			updateUser ({...data,id:userID}).then (res => {
+				setIsSaving (false)
+				if (res.data.code === 200) {
+					toast.success (res.data.message)
+					setIsModalOpen(false)
+					form.resetFields();
+					fetchUsers ()
+				}
+			}).catch (err => {
+				setIsSaving (false)
+				console.log (err)
+			})
+		} else {
+			createUser (data).then (res => {
+				setIsSaving (false)
+				if (res.data.code === 200) {
+					toast.success (res.data.message)
+					fetchUsers ()
+				}
+			}).catch (err => {
+				setIsSaving (false)
+				console.log (err)
+			})
+		}
 	}
-	
+	const onChange = (page) => {
+		setPage(page);
+	};
 	return (
 		<div className={"p-4"}>
 			<Card title={"Quản lí người dùng"}>
@@ -169,7 +187,10 @@ const User = () => {
 					{
 						isLoading ? <div className={"flex justify-center"}>
 							<Spin/>
-						</div> : <Table className={"my-6"} columns={columns} dataSource={data} />
+						</div> : <>
+							<Table className={"my-6"} columns={columns} dataSource={data} pagination={false}/>
+							<Pagination defaultCurrent={page} total={total} onChange={onChange}/>;
+						</>
 					}
 				</div>
 			</Card>
