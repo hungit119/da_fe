@@ -190,14 +190,7 @@ const LayoutSite               = () => {
 								<FontAwesomeIcon icon={ faCreditCard } size={ "sm" } className={ "me-4" }/>
 								<p className={ "font-bold" }>Bảng</p>
 							</NavLink>
-							<NavLink to={ "/member" }
-							         className={ "grid grid-cols-3 items-baseline px-4 py-2 hover:bg-[#3C3F42]" }>
-								<FontAwesomeIcon
-									icon={ faUsers } size={ "sm" }
-									className={ "me-4" }/> <p
-								className={ "font-bold" }>Member</p>
-							</NavLink>
-							<NavLink to={ "/profile" }
+							<NavLink to={ "/profile/" + getUserFromLocalStorage()?.id }
 							         className={ "grid grid-cols-3 items-baseline px-4 py-2 hover:bg-[#3C3F42]" }>
 								<FontAwesomeIcon
 									icon={ faUser } size={ "sm" }
@@ -205,7 +198,7 @@ const LayoutSite               = () => {
 								<p className={ "font-bold" }>Profile</p>
 							</NavLink>
 							{
-								getUserFromLocalStorage()?.role_id === ROLE_ADMIN && <NavLink to={ "/users" }
+								getUserFromLocalStorage()?.roles.includes(ROLE_ADMIN)  && <NavLink to={ "/users" }
 								                                                              className={ "grid grid-cols-3 items-baseline px-4 py-2 hover:bg-[#3C3F42]" }>
 									<FontAwesomeIcon
 										icon={ faUserFriends } size={ "sm" }
@@ -244,7 +237,7 @@ const LayoutSite               = () => {
 					>
 						<Routes>
 							<Route path="/" element={ <DashBoard/> }/>
-							<Route path="/profile" element={ <Profile/> }/>
+							<Route path="/profile/:id" element={ <Profile/> }/>
 							<Route path="/setting" element={ <Setting/> }/>
 							<Route path="/board/:id" element={ <BoardDetail/> }/>
 							<Route path="/users" element={ <User/> }/>

@@ -449,14 +449,14 @@ const CardItem = ({card, part, index}) => {
 										<div className={ "mt-2" }>
 											<p>Trong danh sách <span className={ "underline" }>{ part.name }</span></p>
 										</div>
-										<div className={ "mt-6" }>
-											<p className={ "my-2" }>Thông báo</p>
-											<Button type={ "primary" } size={ "middle" }
-											        icon={ <FontAwesomeIcon icon={ faEye } width={ 20 }
-											                                size={ "sm" }/> }>
-												Theo dõi
-											</Button>
-										</div>
+										{/*<div className={ "mt-6" }>*/}
+										{/*	<p className={ "my-2" }>Thông báo</p>*/}
+										{/*	<Button type={ "primary" } size={ "middle" }*/}
+										{/*	        icon={ <FontAwesomeIcon icon={ faEye } width={ 20 }*/}
+										{/*	                                size={ "sm" }/> }>*/}
+										{/*		Theo dõi*/}
+										{/*	</Button>*/}
+										{/*</div>*/}
 									</div>
 								</div>
 								<div className={ "my-6 flex items-start w-100 pe-6 gap-4" }>
@@ -563,8 +563,10 @@ const CardItem = ({card, part, index}) => {
 														setNameCheckListItem={ handleChangeChecklistItem }
 														handleClickSaveCheckListItem={ handleCreateCheckListItem }
 														setJobScore={setJobScore}
+														jobScore={jobScore}
 														setDateTimeEndCheckListItem={setDateTimeEndCheckListItem}
 														setDateTimeStartCheckListItem={setDateTimeStartCheckListItem}
+														dateTimeStartCheckListItem={dateTimeStartCheckListItem}
 														saving={ saving }
 														part_id={ part?.id }
 														card_id={ card?.id }
@@ -637,7 +639,7 @@ const CardItem = ({card, part, index}) => {
 									</div>
 								}
 							</div>
-							<div className={ "flex justify-end mt-4 ms-6" }>
+							<div className={ "flex justify-end mt-4 ms-6 px-6" }>
 								<Button
 									type={ "primary" } htmlType={ "submit" } size={ "large" }
 								>Lưu thẻ</Button>
@@ -649,7 +651,7 @@ const CardItem = ({card, part, index}) => {
 								<p className={ "text-xl font-bold" }>Bình luận</p>
 							</div>
 						</div>
-						<div className={ "w-100 mt-4 flex items-start" }>
+						<div className={ "w-100 mt-4 flex items-start px-6" }>
 							<div className={ "me-2" }>
 								<Avatar src={ getUserFromLocalStorage ()?.avatar ?? AvatarDefault } size={ "large" }/>
 							</div>
@@ -679,15 +681,6 @@ const CardItem = ({card, part, index}) => {
 					</div>
 					<div className={ "nunito py-10" }>
 						<p className={ "text-sm mb-2" }>Thêm vào thẻ</p>
-						<Button block type={ "primary" } className={ "flex justify-start bg-[#3B444C]" }
-						        icon={ <FontAwesomeIcon icon={ faUser } size={ "sm" }/> }>
-							<p>Thêm thành viên</p>
-						</Button>
-						<Button block type={ "primary" } className={ "flex justify-start my-2 bg-[#3B444C]" }
-						        icon={ <FontAwesomeIcon icon={ faTag } size={ "sm" }/> }
-						>
-							<p>Nhãn</p>
-						</Button>
 						<Button block type={ "primary" } className={ "flex justify-start my-2 bg-[#3B444C]" }
 						        icon={ <FontAwesomeIcon icon={ faCheck } size={ "sm" }/> }
 						        onClick={ () => {
@@ -701,23 +694,6 @@ const CardItem = ({card, part, index}) => {
 						        onClick={ showDrawer }
 						>
 							<p>Ngày</p>
-						</Button>
-						<Button block type={ "primary" } className={ "flex justify-start my-2 bg-[#3B444C]" }
-						        icon={ <FontAwesomeIcon icon={ faPaperclip } size={ "sm" }/> }>
-							<p>Đính kèm</p>
-						</Button>
-						<p className={ "text-sm my-4" }>Thao tác</p>
-						<Button block type={ "primary" } className={ "flex justify-start my-2 bg-[#3B444C]" }
-						        icon={ <FontAwesomeIcon icon={ faArrowRight } size={ "sm" }/> }>
-							<p>Di chuyển</p>
-						</Button>
-						<Button block type={ "primary" } className={ "flex justify-start my-2 bg-[#3B444C]" }
-						        icon={ <FontAwesomeIcon icon={ faBookmark } size={ "sm" }/> }>
-							<p>Lưu trữ</p>
-						</Button>
-						<Button block type={ "primary" } className={ "flex justify-start my-2 bg-[#3B444C]" }
-						        icon={ <FontAwesomeIcon icon={ faShare } size={ "sm" }/> }>
-							<p>Chia sẻ</p>
 						</Button>
 					</div>
 				</div>

@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckSquare } from "@fortawesome/free-solid-svg-icons";
-import { Avatar, Button, Checkbox, DatePicker, Input, InputNumber, Progress, Spin, Tooltip } from "antd";
+import { Avatar, Button, Checkbox, DatePicker, Input, InputNumber, Progress, Skeleton, Spin, Tooltip } from "antd";
 import { predict, updateCheckListItem } from "../service";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,7 +11,9 @@ import { ROLE_ADMIN, SERVICE_CHECK_LIST_RELOAD, SERVICE_COMMENT_RELOAD } from ".
 import { getUserFromLocalStorage } from "../session";
 import AvatarDefault from "../assets/avatar.jpg"
 import { dateToHMDDMonthYYYY, dateToMMDD } from "../utils/time";
+import dayjs from 'dayjs';
 import moment from "moment-timezone";
+import { LoadingOutlined } from "@ant-design/icons";
 
 
 const CheckList = ({
@@ -21,7 +23,9 @@ const CheckList = ({
 	                   setNameCheckListItem,
 	                   setDateTimeStartCheckListItem,
 	                   setDateTimeEndCheckListItem,
+	                   dateTimeStartCheckListItem,
 	                   setJobScore,
+	                   jobScore,
 	                   handleClickSaveCheckListItem,
 	                   saving,
 	                   part_id,
@@ -30,6 +34,11 @@ const CheckList = ({
                    }) => {
 	const dispatch             = useDispatch ();
 	const board = useSelector ((state) => state.board.board);
+	
+	const [isPredicting, setIsPredicting] = useState (false)
+	const [defaultEndDate, setDefaultEndDate] = useState ("1970-01-01 00:00:00")
+	const dateFormat = 'YYYY-MM-DD HH:mm:ss'
+	
 	const handleChangeCheckBox = (e, id) => {
 		updateCheckListItem ({
 			id     : id,
@@ -62,16 +71,19 @@ const CheckList = ({
 		})
 	}
 	const handleClickPredict = (userID, timeStart,jobScore) => {
+		setIsPredicting(true)
 		const data = {
-			userID,
+			user_id:userID,
 			time_start :timeStart,
-			jobScore
+			job_score:jobScore
 		}
 		predict(data).then(res => {
+			setIsPredicting(false)
 			if (res.data.code === 200) {
-				console.log (res.data)
+				setDefaultEndDate(res.data.data?.end_date)
 			}
 		}).catch(err => {
+			setIsPredicting(false)
 			toast.error(err)
 		})
 	}
@@ -107,10 +119,10 @@ const CheckList = ({
 									          checked={ checklistItem?.is_checked } className={ "me-2" }/>
 									<div>
 										<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }>{ checklistItem?.name }</p>
-										<div>
-											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }> Job score : <span className={"font-bold text-blue-600"}>{ checklistItem?.job_score }</span></p>
-											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }> Start date : <span className={"font-bold text-blue-600"}>{ dateToMMDD(checklistItem?.time_start) }</span></p>
-											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }> Estimated end date : <span className={"font-bold text-red-600"}>{ dateToMMDD(checklistItem?.estimate_time_end) }</span></p>
+										<div className={"shadow-md p-4 rounded-lg"}>
+											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }> Job score : <span className={"font-bold text-blue-300"}>{ checklistItem?.job_score }</span></p>
+											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }> Start date : <span className={"font-bold text-blue-300"}>{ dateToMMDD(checklistItem?.time_start) }</span></p>
+											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }> Estimated end date : <span className={"font-bold text-red-500"}>{ dateToMMDD(checklistItem?.estimate_time_end) }</span></p>
 										</div>
 									</div>
 								</div>
@@ -122,26 +134,52 @@ const CheckList = ({
 			{
 				showForm.show && showForm.id === checklist.id ?
 					<div>
-						<div>
-							<Input variant={ "filled" } rootClassName={ "py-4 nunito text-white mt-4" }
+						<div className={"shadow-lg rounded-lg p-4 mb-4"}>
+							<div className={"text-lg"}>Tiêu đề công việc</div>
+							<Input variant={ "filled" } rootClassName={ "pb-4 nunito text-white mt-4" }
 							       placeholder={ "Thêm một mục" }
 							       onChange={ (value) => setNameCheckListItem (value, checklist.id) }/>
-							<div className={"flex flex-col items-start"}>
-								<div className={"flex items-center gap-4"}>
-									<p>Chọn thời gian bắt đầu</p>
-									<DatePicker  rootClassName={"my-4"}  onChange={(date, dateString) => {
-										setDateTimeStartCheckListItem(date.valueOf());
-									}} />
-									<InputNumber className={"w-[150px]"} min={1} placeholder={"Chọn job score"} onChange={(value) => {
-										setJobScore(value)
-									}}/>
+							<div className={ "flex flex-col items-start m-2 p-4 shadow-xl rounded-lg" }>
+								<div className={ "flex flex-col items-center gap-4" }>
+									<div className={"flex items-end  gap-4"}>
+										<div>
+											<p className={'mb-2'}>Thời gian bắt đầu</p>
+											<DatePicker  size={"large"} placeholder={"Bắt đầu"} onChange={ (date, dateString) => {
+												setDateTimeStartCheckListItem (date?.valueOf ());
+											} }/>
+										</div>
+										<div>
+											<p className={'mb-2'}>Độ phức tạp công việc</p>
+											<InputNumber size={ "large" } className={ "w-[150px]" } min={ 1 }
+											             placeholder={ "Độ phức tạp" }
+											             onChange={ (value) => {
+												             setJobScore (value)
+											             } }/>
+										</div>
+										<Tooltip className={"nunito"} title={"Chúng tôi sẽ dựa vào những dữ liệu trong quá khứ của bạn để dự đoán thời gian bạn hoàn thành công việc một cách chính xác nhất có thể"}>
+											<Button className={"bg-emerald-600"} size={"large"} disabled={ isPredicting } type={ "primary" }
+											        onClick={ () => handleClickPredict (checklist?.user_id, dateTimeStartCheckListItem, jobScore) }>
+												{
+													isPredicting ? <Spin/> : "Dự đoán"
+												}
+											
+											</Button>
+										</Tooltip>
+									</div>
 								</div>
-								<Button type={"primary"} onClick={handleClickPredict}>Dự đoán</Button>
-								<div className={"flex items-center gap-4"}>
+								<div className={ "flex items-center gap-4 py-4" }>
+									<p>Thời gian kết thúc dự đoán</p>
+									{
+										isPredicting ? <Skeleton.Input active={isPredicting} size={"large"} /> :
+											<p className={"font-bold text-cyan-300"}>{ defaultEndDate }</p>
+									}
+								</div>
+								<div className={ "flex items-center gap-4" }>
 									<p>Thời gian kết thúc</p>
-									<DatePicker rootClassName={ "my-4" }  onChange={ (date, dateString) => {
-										setDateTimeEndCheckListItem (date.valueOf())
-									} }/>
+									<DatePicker size={"large"} disabled={!dateTimeStartCheckListItem} rootClassName={ "my-4" }
+									            onChange={ (date, dateString) => {
+										            setDateTimeEndCheckListItem (date?.valueOf ())
+									            } }/>
 								</div>
 							</div>
 						</div>

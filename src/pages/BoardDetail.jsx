@@ -36,6 +36,7 @@ const BoardDetail = () => {
 	const [fetchingPart, setFetchingPart]         = React.useState (true);
 	const [showFormAddPart, setShowFormAddPart]   = React.useState (false);
 	const [isModalShareOpen, setIsModalShareOpen] = useState (false);
+	const [reload, setReload] = useState (false);
 	
 	const [form] = Form.useForm ();
 	
@@ -102,6 +103,7 @@ const BoardDetail = () => {
 			setFetchingPart (false);
 			if (res.data.code === 200) {
 				dispatch (setParts (res.data.data));
+				setReload(false)
 			}
 		}).catch (err => {
 			setFetchingPart (false)
@@ -192,7 +194,6 @@ const BoardDetail = () => {
 				}))
 			}
 		}
-		
 		return () => {
 			socket.send (JSON.stringify ({
 				type    : "leaveRoom",
@@ -200,7 +201,7 @@ const BoardDetail = () => {
 				room    : `board_${ id }`
 			}))
 		}
-	}, [id]);
+	}, [id,reload]);
 	return (
 		<div>
 			{
@@ -258,7 +259,7 @@ const BoardDetail = () => {
 												     ref={ provided.innerRef } { ...provided.droppableProps }>
 													{
 														JSON.parse (JSON.stringify (parts)).sort ((a, b) => a.position - b.position).map ((part, index) => (
-															<Part part={ part } index={ index }/>
+															<Part part={ part } index={ index } setReload={setReload}/>
 														))
 													}
 													{ provided.placeholder }

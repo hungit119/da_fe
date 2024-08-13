@@ -129,5 +129,12 @@ export const deleteUser = (params) => {
 	return axiosInstance.post("/v1/delete-user",params)
 }
 export const predict = (params) => {
-	return axiosInstance.post("/predict-time-end",params)
+	return axiosInstance.post("/v1/predict-time-end",params)
+}
+export const updatePart = (params) => {
+	return axiosInstance.post("/v1/update-part",params)
+}
+
+export const getUserDetail = (params) => {
+	return axiosInstance.get ("/v1/get-user", {params})
 }
