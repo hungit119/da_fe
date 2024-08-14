@@ -15,7 +15,7 @@ import { useForm } from "antd/es/form/Form";
 const Part = ({
 	              part,
 	              index,
-				 setReload
+				 setReload,
               }) => {
 	const {TextArea} = Input;
 	
@@ -117,7 +117,7 @@ const Part = ({
 								icon={ <FontAwesomeIcon icon={ faEllipsisH } width={ 20 } color={ "white" }/> }/>
 						</div>
 						<div className={"mt-2"}>
-							<ListCard part={part} index={index}/>
+							<ListCard part={part} index={index} setIsReloadCard={setReload}/>
 						</div>
 						{
 							showForm ? <div>

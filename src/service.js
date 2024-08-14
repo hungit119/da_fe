@@ -70,7 +70,9 @@ export const saveCard               = (params) => {
 export const createCheckList = (params) => {
 	return axiosInstance.post ("/v1/create-checklist", params)
 }
-
+export const updateChecklist = (params) => {
+	return axiosInstance.post ("/v1/update-checklist", params)
+}
 
 // checklist item
 export const createCheckListItem = (params) => {
@@ -137,4 +139,8 @@ export const updatePart = (params) => {
 
 export const getUserDetail = (params) => {
 	return axiosInstance.get ("/v1/get-user", {params})
+}
+
+export const updateCard = (params) => {
+	return axiosInstance.post("/v1/update-card",params)
 }

@@ -27,3 +27,11 @@ export const dateToMMDD = (timestamp) => {
 	
 	return formattedDate;
 }
+export const convertTimestampToDate2 = (timestamp) =>  {
+	const date = new Date(timestamp);
+	return date.toISOString().split('T')[0];
+}
+export const convertTimestampToDate = (timestamp) =>  {
+	const date = new Date(timestamp);
+	return date.toLocaleDateString('en-CA'); // en-CA format corresponds to YYYY-MM-DD
+}

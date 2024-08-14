@@ -1,18 +1,18 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Draggable } from "react-beautiful-dnd";
-import { Avatar, Button, DatePicker, Form, Image, Input, Modal, Select, Spin, Tooltip } from "antd";
+import { Avatar, Button, DatePicker, Drawer, Form, Image, Input, Modal, Select, Spin, Tooltip } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
 	faArrowRight,
 	faBookmark,
 	faCheck,
 	faClock,
-	faCreditCard,
+	faCreditCard, faEdit,
 	faEye,
 	faList,
 	faListUl,
 	faPaperclip,
-	faPencil,
+	faPencil, faSave,
 	faShare,
 	faTag,
 	faUser
@@ -22,7 +22,7 @@ import 'react-quill/dist/quill.snow.css';
 import ReactQuill from "react-quill";
 import axios from "axios";
 import { useForm } from "antd/es/form/Form";
-import { createCheckList, createCheckListItem, createComment, getListComment, saveCard } from "../service";
+import { createCheckList, createCheckListItem, createComment, getListComment, saveCard, updateCard } from "../service";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { addChecklist, addChecklistItem, saveCardSlice, updateCheckListItemSlice } from "../features/part/partSlice";
@@ -33,6 +33,7 @@ import { addComment, setComments } from "../features/activity/activitySlice";
 import Comment from "./Comment";
 import socket from "../webSocket";
 import {
+	ROLE_ADMIN,
 	SERVICE,
 	SERVICE_CHECK_LIST_RELOAD,
 	SERVICE_COMMENT,
@@ -41,10 +42,12 @@ import {
 } from "../constant";
 import { useParams } from "react-router-dom";
 import DateChoose from "./DateChoose";
+import { maxChecklistTime } from "../utils/checklist";
+import { convertTimestampToDate } from "../utils/time";
 
 const {RangePicker} = DatePicker;
 
-const CardItem = ({card, part, index}) => {
+const CardItem = ({card, part, index,setIsReloadCard}) => {
 	const {id}      = useParams ();
 	const activites = useSelector (( state => state.activity.activities ))
 	const board = useSelector((state => state.board.board))
@@ -57,6 +60,7 @@ const CardItem = ({card, part, index}) => {
 	const [images, setImages]           = React.useState ([]);
 	const [form]                        = useForm ()
 	const [formCheckLists]              = useForm ();
+	const [formCard] = useForm();
 	
 	const [showCreateCheckList, setShowCreateCheckList]         = useState (false)
 	const [saving, setSaving]                                   = useState (false);
@@ -79,6 +83,15 @@ const CardItem = ({card, part, index}) => {
 	const [reloadListComments, setReloadListComments] = useState (false)
 	
 	const [open, setOpen] = useState (false);
+	
+	const [openEditCard, setOpenEditCard] = useState(false);
+	const [activeSave,setActiveSave] = useState(false)
+	const showDrawerEditCard = () => {
+		setOpenEditCard(true);
+	};
+	const onCloseEditCard = () => {
+		setOpenEditCard(false);
+	};
 	const showDrawer      = () => {
 		setOpen (true);
 	};
@@ -107,6 +120,23 @@ const CardItem = ({card, part, index}) => {
 		setImages (card.attachments)
 	}, []);
 	
+	const handleFinishEditCard = (values) => {
+		setSaving(true)
+		const data = {
+			id:card?.id,
+			name:values?.name,
+		}
+		updateCard(data).then(res => {
+			setSaving(false)
+			if (res.data.code === 200){
+				toast.success(res.data.message)
+				setIsReloadCard(true)
+			}
+		}).catch(err => {
+			setSaving(false)
+			console.log (err)
+		})
+	}
 	const imageHandler = useCallback (() => {
 		const input = document.createElement ("input");
 		input.setAttribute ("type", "file");
@@ -125,6 +155,29 @@ const CardItem = ({card, part, index}) => {
 		};
 		
 	}, []);
+	
+	const handleClickDeleteCard = () => {
+		// eslint-disable-next-line no-restricted-globals
+		let ok = confirm("Bạn có chắc chắn muốn xóa thẻ :" + card?.name)
+		if (ok) {
+			setSaving(true)
+			const data = {
+				id:card?.id,
+				name:card?.name,
+				is_deleted:1
+			}
+			updateCard(data).then(res => {
+				setSaving(false)
+				if (res.data.code === 200){
+					toast.success(res.data.message)
+					setIsReloadCard(true)
+				}
+			}).catch(err => {
+				setSaving(false)
+				console.log (err)
+			})
+		}
+	}
 	
 	const uploadToCloudinary = async (file) => {
 		const formData = new FormData ();
@@ -364,6 +417,33 @@ const CardItem = ({card, part, index}) => {
 			})
 		}
 	}, [reloadListComments]);
+	
+	const onValuesChange = (changedValues, allValues) => {
+		if (changedValues.name !== card?.name){
+			setActiveSave(true)
+		}else {
+			setActiveSave (false)
+		}
+	};
+	
+	const handleSaveCard = () => {
+		setSaving(true)
+		const data = {
+			id:card?.id,
+			name: form.getFieldValue("name")
+		}
+		updateCard(data).then(res => {
+				setSaving(false)
+			if (res.data.code === 200) {
+				toast.success(res.data.message)
+				setIsReloadCard(true)
+			}
+		}).catch(err => {
+			setSaving(false)
+			console.log (err)
+		})
+	}
+	
 	return (
 		<>
 			<Draggable
@@ -438,25 +518,37 @@ const CardItem = ({card, part, index}) => {
 				</div>
 				<div className={ "flex items-start" }>
 					<div className={ "w-5/6" }>
-						<Form onFinish={ onFinish } form={ form } style={ {color : "#B6C2CF"} } className={ "nunito" }>
+						<Form onValuesChange={onValuesChange} onFinish={ onFinish } form={ form } style={ {color : "#B6C2CF"} } className={ "nunito" }>
 							<div>
 								<div className={ "flex items-start w-100 pe-6 gap-4" }>
 									<FontAwesomeIcon icon={ faCreditCard } size={ "xl" } className={ "mt-2" }/>
 									<div className={ "flex-1" }>
-										<Form.Item name="name" className={ "m-0 flex-1" }>
-											<Input variant={ "filled" } rootClassName={ "nunito text-xl w-100" }/>
-										</Form.Item>
+										<div className={"flex items-center gap-4"}>
+											<Form.Item name="name" className={ "m-0 flex-1" } rules={[{
+												required: true,
+											}]}>
+												<Input variant={ "filled" } rootClassName={ "nunito text-xl w-100" }/>
+											</Form.Item>
+											{
+												activeSave && <Button icon={<FontAwesomeIcon icon={faSave}/>} disabled={saving} onClick={handleSaveCard}>Lưu</Button>
+											}
+										</div>
 										<div className={ "mt-2" }>
 											<p>Trong danh sách <span className={ "underline" }>{ part.name }</span></p>
 										</div>
-										{/*<div className={ "mt-6" }>*/}
-										{/*	<p className={ "my-2" }>Thông báo</p>*/}
-										{/*	<Button type={ "primary" } size={ "middle" }*/}
-										{/*	        icon={ <FontAwesomeIcon icon={ faEye } width={ 20 }*/}
-										{/*	                                size={ "sm" }/> }>*/}
-										{/*		Theo dõi*/}
-										{/*	</Button>*/}
-										{/*</div>*/}
+										<div className={ "mt-6 rounded-lg shadow-xl p-4" }>
+											<p className={ "my-2" }>Quản lí card</p>
+											<Button type={ "primary" } size={ "middle" }
+											        icon={ <FontAwesomeIcon icon={ faEdit } width={ 20 }
+											                                size={ "sm" }/> }
+											        onClick={ () => {
+												        showDrawerEditCard ()
+												        formCard.setFieldValue ("name", card?.name)
+											        } }
+											>
+												Chỉnh sửa card
+											</Button>
+										</div>
 									</div>
 								</div>
 								<div className={ "my-6 flex items-start w-100 pe-6 gap-4" }>
@@ -550,6 +642,14 @@ const CardItem = ({card, part, index}) => {
 										}
 									</div>
 								</div>
+								<div className={ "my-6 shadow-lg rounded-lg p-4" }>
+									<p className={ "text-xl" }>Cột mốc hoàn thành <span
+										className={ "font-bold text-xl text-cyan-300" }>{ card?.name } </span>: {" "}
+										<span className={"px-2  py-2 shadow-lg rounded-lg bg-green-900 font-bold text-white"}>{
+											convertTimestampToDate(maxChecklistTime(card?.checklists)?.estimate_time_end)
+										}</span>
+									</p>
+								</div>
 								<div className={ "my-6" }>
 									{
 										card?.checklists?.length > 0 && <div>
@@ -562,15 +662,16 @@ const CardItem = ({card, part, index}) => {
 														showForm={ showForm }
 														setNameCheckListItem={ handleChangeChecklistItem }
 														handleClickSaveCheckListItem={ handleCreateCheckListItem }
-														setJobScore={setJobScore}
-														jobScore={jobScore}
-														setDateTimeEndCheckListItem={setDateTimeEndCheckListItem}
-														setDateTimeStartCheckListItem={setDateTimeStartCheckListItem}
-														dateTimeStartCheckListItem={dateTimeStartCheckListItem}
+														setJobScore={ setJobScore }
+														jobScore={ jobScore }
+														setDateTimeEndCheckListItem={ setDateTimeEndCheckListItem }
+														setDateTimeStartCheckListItem={ setDateTimeStartCheckListItem }
+														dateTimeStartCheckListItem={ dateTimeStartCheckListItem }
 														saving={ saving }
 														part_id={ part?.id }
 														card_id={ card?.id }
-														user={board?.users?.find(user => user?.id===checklist?.user_id)}
+														user={ board?.users?.find (user => user?.id === checklist?.user_id) }
+														setReloadCheckList={setIsReloadCard}
 													/>
 												))
 											}
@@ -620,15 +721,6 @@ const CardItem = ({card, part, index}) => {
 																	<p>Đã thêm {
 																		timeLast
 																	} trước</p> <span className={ "mx-2" }>&#x25CF;</span>
-																	<p
-																		className={ "underline" }>Bình
-																	                              luận</p>
-																	<span className={ "mx-2" }>&#x25CF;</span> <p
-																	className={ "underline" }>Tải xuống</p>
-																	<span className={ "mx-2" }>&#x25CF;</span> <p
-																	className={ "underline" }>Xóa</p>
-																	<span className={ "mx-2" }>&#x25CF;</span> <p
-																	className={ "underline" }>Chỉnh sửa</p>
 																</div>
 															</div>
 														</div>
@@ -733,6 +825,19 @@ const CardItem = ({card, part, index}) => {
 				</div>
 			</Modal>
 			<DateChoose open={ open } onClose={ onClose }/>
+			<Drawer title="Chỉnh sửa thẻ" onClose={onCloseEditCard} open={openEditCard}>
+				<Button onClick={handleClickDeleteCard} className={"my-4"} size={"large"} danger>Xóa thẻ</Button>
+				<Form layout={"vertical"} form={formCard} onFinish={ handleFinishEditCard }>
+					<Form.Item name={"name"} label={"Tên thẻ"} rules={[{required:true}]}>
+						<Input placeholder={"Tên thẻ"}/>
+					</Form.Item>
+					<Button type={"primary"} htmlType={"submit"} disabled={saving}>
+						{
+							saving ? <Spin/> : "Lưu"
+						}
+					</Button>
+				</Form>
+			</Drawer>
 		</>
 	);
 };

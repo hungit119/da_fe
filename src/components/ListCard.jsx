@@ -2,7 +2,7 @@ import React from 'react';
 import { Draggable, Droppable } from "react-beautiful-dnd";
 import CardItem from "./CardItem";
 
-const ListCard = ({part,index}) => {
+const ListCard = ({part,index,setIsReloadCard}) => {
 	return (
 		<Droppable
 			droppableId={ `part-${ part.id }` }
@@ -17,7 +17,7 @@ const ListCard = ({part,index}) => {
 				>
 					{
 						part.cards?.map ((card, index) =>
-							<CardItem card={card} part={part} index={index} />
+							<CardItem card={card} part={part} index={index} setIsReloadCard={setIsReloadCard}/>
 						)
 					}
 					{ providedCard.placeholder }

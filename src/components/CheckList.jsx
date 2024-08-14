@@ -1,8 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheckSquare } from "@fortawesome/free-solid-svg-icons";
-import { Avatar, Button, Checkbox, DatePicker, Input, InputNumber, Progress, Skeleton, Spin, Tooltip } from "antd";
-import { predict, updateCheckListItem } from "../service";
+import { faCheckSquare, faTrash } from "@fortawesome/free-solid-svg-icons";
+import {
+	Avatar,
+	Button,
+	Checkbox,
+	DatePicker, Form,
+	Input,
+	InputNumber,
+	Modal,
+	Progress,
+	Skeleton,
+	Spin,
+	Tooltip
+} from "antd";
+import { predict, updateChecklist, updateCheckListItem } from "../service";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { updateCheckListItemSlice } from "../features/part/partSlice";
@@ -10,10 +22,12 @@ import socket from "../webSocket";
 import { ROLE_ADMIN, SERVICE_CHECK_LIST_RELOAD, SERVICE_COMMENT_RELOAD } from "../constant";
 import { getUserFromLocalStorage } from "../session";
 import AvatarDefault from "../assets/avatar.jpg"
-import { dateToHMDDMonthYYYY, dateToMMDD } from "../utils/time";
+import { convertTimestampToDate, dateToHMDDMonthYYYY, dateToMMDD } from "../utils/time";
 import dayjs from 'dayjs';
 import moment from "moment-timezone";
 import { LoadingOutlined } from "@ant-design/icons";
+import { BiTrash } from "react-icons/bi";
+import { useForm } from "antd/es/form/Form";
 
 
 const CheckList = ({
@@ -31,13 +45,27 @@ const CheckList = ({
 	                   part_id,
 	                   card_id,
 	                   user,
+	                   setReloadCheckList
                    }) => {
 	const dispatch             = useDispatch ();
 	const board = useSelector ((state) => state.board.board);
 	
 	const [isPredicting, setIsPredicting] = useState (false)
 	const [defaultEndDate, setDefaultEndDate] = useState ("1970-01-01 00:00:00")
+	const [form] = useForm()
+	const [isSaving, setIsSaving] = useState (false)
 	const dateFormat = 'YYYY-MM-DD HH:mm:ss'
+	
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const showModal = () => {
+		setIsModalOpen(true);
+	};
+	const handleOk = () => {
+		setIsModalOpen(false);
+	};
+	const handleCancel = () => {
+		setIsModalOpen(false);
+	};
 	
 	const handleChangeCheckBox = (e, id) => {
 		updateCheckListItem ({
@@ -87,6 +115,67 @@ const CheckList = ({
 			toast.error(err)
 		})
 	}
+	
+	function handleClickDeleteJob (id,name) {
+		// eslint-disable-next-line no-restricted-globals
+		let ok = confirm("Bạn có chắc chắn muốn xóa công việc :" + name)
+		if (ok) {
+			updateCheckListItem({
+				id: id,
+				status:0,
+				is_deleted:1,
+			}).then(res => {
+				if (res.data.code === 200) {
+					toast.success(res.data.message)
+					setReloadCheckList(true)
+				}
+			}).catch(err => {
+				console.log (err)
+			})
+		}
+	}
+	
+	function handleClickDeleteChecklist () {
+		// eslint-disable-next-line no-restricted-globals
+		let ok = confirm("Bạn có chắc chắn muốn xóa checklist : " + checklist?.name)
+		if (ok){
+			updateChecklist({
+				id:checklist?.id,
+				is_deleted:1,
+				name:checklist?.name
+			}).then(res => {
+				if (res.data.code === 200) {
+					toast.success(res.data.message)
+					setReloadCheckList(true)
+				}
+			}).catch(err => {
+				console.log (err)
+			})
+		}
+	}
+	const handleClickEdit = () => {
+		setIsModalOpen(true)
+		form.setFieldValue("name",checklist?.name)
+	}
+	
+	const handleFinish = (values) => {
+		setIsSaving(true)
+		updateChecklist({
+			id:checklist?.id,
+			name:values.name
+		}).then(res => {
+			setIsSaving(false)
+			if (res.data.code === 200){
+				toast.success(res.data.message)
+				setIsModalOpen(false)
+				setReloadCheckList(true)
+			}
+		}).catch(err => {
+			setIsSaving(false)
+			console.log (err)
+		})
+	}
+	
 	return (
 		<div className={ "my-6" }>
 			<div className={ "flex justify-between items-center" }>
@@ -98,8 +187,27 @@ const CheckList = ({
 					<Tooltip title={ user?.name } placement="top">
 						<Avatar src={ user?.avatar ?? AvatarDefault }/>
 					</Tooltip>
+					<div className={'flex items-center gap-4'}>
+						<p className={"font-bold"}>
+							Cột mốc :
+						</p>
+						<p className={"font-bold text-green-500 text-lg px-2 border-2 border-b-green-500 rounded-lg"}>
+							{
+								convertTimestampToDate(checklist?.check_list_items?.reduce((max, item) => {
+									return item.estimate_time_end > max.estimate_time_end ? item : max;
+								}, checklist?.check_list_items[0])?.estimate_time_end)
+							}
+						</p>
+					</div>
 				</div>
-				<Button type={ "primary" } disabled={board?.users?.find(user => user?.id === getUserFromLocalStorage()?.id)?.pivot?.role_id !== ROLE_ADMIN}>Xóa</Button>
+				<div className={"flex items-center gap-2"}>
+					<Button type={ "primary" } disabled={board?.users?.find(user => user?.id === getUserFromLocalStorage()?.id)?.roles?.includes(ROLE_ADMIN)}
+					        onClick={handleClickEdit}
+					>Sửa</Button>
+					<Button type={ "primary" } danger disabled={board?.users?.find(user => user?.id === getUserFromLocalStorage()?.id)?.roles?.includes(ROLE_ADMIN)}
+					        onClick={handleClickDeleteChecklist}
+					>Xóa</Button>
+				</div>
 			</div>
 			<div className={ "my-2" }>
 				<Progress
@@ -118,8 +226,11 @@ const CheckList = ({
 									<Checkbox onChange={ (e) => handleChangeCheckBox (e, checklistItem?.id) }
 									          checked={ checklistItem?.is_checked } className={ "me-2" }/>
 									<div>
-										<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }>{ checklistItem?.name }</p>
-										<div className={"shadow-md p-4 rounded-lg"}>
+										<div className={'flex items-center justify-between'}>
+											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }>{ checklistItem?.name }</p>
+											<Button danger type={"primary"} onClick={() => handleClickDeleteJob(checklistItem?.id,checklistItem?.name)} icon={<BiTrash/>} size={"small"}>Xóa</Button>
+										</div>
+										<div className={ "shadow-md p-4 rounded-lg" }>
 											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }> Job score : <span className={"font-bold text-blue-300"}>{ checklistItem?.job_score }</span></p>
 											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }> Start date : <span className={"font-bold text-blue-300"}>{ dateToMMDD(checklistItem?.time_start) }</span></p>
 											<p className={ `${ checklistItem?.is_checked ? 'line-through' : '' }` }> Estimated end date : <span className={"font-bold text-red-500"}>{ dateToMMDD(checklistItem?.estimate_time_end) }</span></p>
@@ -144,7 +255,14 @@ const CheckList = ({
 									<div className={"flex items-end  gap-4"}>
 										<div>
 											<p className={'mb-2'}>Thời gian bắt đầu</p>
-											<DatePicker  size={"large"} placeholder={"Bắt đầu"} onChange={ (date, dateString) => {
+											<DatePicker minDate={
+												checklist?.check_list_items?.reduce((max, item) => {
+													return item.estimate_time_end > max.estimate_time_end ? item : max;
+												}, checklist?.check_list_items[0])?.estimate_time_end ?
+												dayjs(convertTimestampToDate(checklist?.check_list_items?.reduce((max, item) => {
+													return item.estimate_time_end > max.estimate_time_end ? item : max;
+												}, checklist?.check_list_items[0])?.estimate_time_end + (24 * 60 * 60 * 1000)),"YYYY-MM-DD") :  dayjs()
+											} size={"large"} placeholder={"Bắt đầu"} onChange={ (date, dateString) => {
 												setDateTimeStartCheckListItem (date?.valueOf ());
 											} }/>
 										</div>
@@ -176,7 +294,7 @@ const CheckList = ({
 								</div>
 								<div className={ "flex items-center gap-4" }>
 									<p>Thời gian kết thúc</p>
-									<DatePicker size={"large"} disabled={!dateTimeStartCheckListItem} rootClassName={ "my-4" }
+									<DatePicker minDate={dayjs(convertTimestampToDate(dateTimeStartCheckListItem + (24 * 60 * 60 * 1000) ),"YYYY-MM-DD")} size={"large"} disabled={!dateTimeStartCheckListItem} rootClassName={ "my-4" }
 									            onChange={ (date, dateString) => {
 										            setDateTimeEndCheckListItem (date?.valueOf ())
 									            } }/>
@@ -203,6 +321,14 @@ const CheckList = ({
 						}) }>Thêm một mục</Button>
 					</div>
 			}
+			<Modal footer={[]} title="Sửa checklist" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+				<Form form={form} onFinish={handleFinish}>
+					<Form.Item name={"name"} rules={[{required:true}]}>
+						<Input placeholder={"Nhâp tiêu đề"}/>
+					</Form.Item>
+					<Button type={"primary"} htmlType={"submit"}>Lưu</Button>
+				</Form>
+			</Modal>
 		</div>
 	);
 };

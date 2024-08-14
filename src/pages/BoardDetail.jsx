@@ -36,6 +36,7 @@ const BoardDetail = () => {
 	const [fetchingPart, setFetchingPart]         = React.useState (true);
 	const [showFormAddPart, setShowFormAddPart]   = React.useState (false);
 	const [isModalShareOpen, setIsModalShareOpen] = useState (false);
+	const [isSharing, setIsSharing] = useState (false);
 	const [reload, setReload] = useState (false);
 	
 	const [form] = Form.useForm ();
@@ -44,6 +45,7 @@ const BoardDetail = () => {
 		setIsModalShareOpen (false);
 	};
 	const handleFinishShare = (values) => {
+		setIsSharing(true)
 		const data = {
 			'email_receiver'    : values.email,
 			'role_id'           : values.role_id,
@@ -53,12 +55,14 @@ const BoardDetail = () => {
 			'user_invite_email' : getUserFromLocalStorage ()?.email,
 		}
 		inviteUserToBoard (data).then (res => {
+			setIsSharing(false)
 			if (res.data.code === 200) {
 				if (res.data.data?.id) {
 					dispatch (addRequestJoinBoard (res.data.data))
 				}
 			}
 		}).catch (err => {
+			setIsSharing(false)
 			console.log (err)
 		})
 	}
@@ -345,7 +349,9 @@ const BoardDetail = () => {
 						</Select>
 					</Form.Item>
 					<Form.Item>
-						<Button type={ "primary" } htmlType={ "submit" } size={ "large" }>Chia sẻ</Button>
+						<Button disabled={isSharing} type={ "primary" } htmlType={ "submit" } size={ "large" }>
+							{isSharing ? <Spin/> : "Chia sẻ"}
+						</Button>
 					</Form.Item>
 				</Form>
 				<Tabs
